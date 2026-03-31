@@ -1,0 +1,157 @@
+---
+export const prerender = true;
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const skills = {
+  Design: ['Figma', 'Design Systems', 'Prototyping', 'User Research', 'Motion'],
+  Frontend: ['TypeScript', 'React', 'Astro', 'CSS / CSS Modules', 'Accessibility'],
+  Backend: ['Node.js', 'PostgreSQL', 'REST APIs', 'Auth / Security'],
+  Tooling: ['Vite', 'pnpm', 'Git', 'Vercel', 'CI/CD'],
+};
+---
+
+<BaseLayout title="About — Graham Holt" description="About Graham Holt — designer and developer.">
+  <section class="container page">
+    <div class="bio-grid">
+      <div class="bio-content">
+        <h1 class="page-title">About</h1>
+        <p class="bio-lead">
+          I'm a designer and developer focused on building interfaces that feel
+          inevitable — simple on the surface, thoughtful underneath.
+        </p>
+        <p class="bio-body">
+          Over the years I've worked across the full product lifecycle: from early-stage
+          discovery and design systems to production engineering. I care about the details
+          that add up to a great experience.
+        </p>
+        <p class="bio-body">
+          When I'm not designing or coding, I'm usually reading, hiking, or tinkering
+          with hardware projects.
+        </p>
+        <div class="contact-row">
+          <a href="mailto:hello@example.com" class="btn-primary">Get in touch</a>
+        </div>
+      </div>
+
+      <aside class="skills">
+        <h2 class="skills-title">Skills</h2>
+        {Object.entries(skills).map(([category, items]) => (
+          <div class="skill-group">
+            <h3 class="skill-category">{category}</h3>
+            <ul class="skill-list">
+              {items.map((item) => <li class="skill-item">{item}</li>)}
+            </ul>
+          </div>
+        ))}
+      </aside>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-top: var(--space-16);
+    padding-bottom: var(--space-24);
+  }
+
+  .bio-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-16);
+    align-items: start;
+  }
+
+  @media (max-width: 768px) {
+    .bio-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .page-title {
+    font-size: var(--text-4xl);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-6);
+  }
+
+  .bio-lead {
+    font-size: var(--text-xl);
+    font-weight: 500;
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-6);
+  }
+
+  .bio-body {
+    font-size: var(--text-base);
+    color: var(--color-text-muted);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-4);
+  }
+
+  .contact-row {
+    margin-top: var(--space-8);
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-3) var(--space-6);
+    background-color: var(--color-accent);
+    color: #0f0f0f;
+    font-weight: 700;
+    font-size: var(--text-sm);
+    border-radius: var(--radius-md);
+    transition: background-color var(--transition-fast);
+  }
+
+  .btn-primary:hover {
+    background-color: var(--color-accent-dark);
+  }
+
+  .skills {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8);
+  }
+
+  .skills-title {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    margin-bottom: var(--space-6);
+    letter-spacing: -0.01em;
+  }
+
+  .skill-group {
+    margin-bottom: var(--space-6);
+  }
+
+  .skill-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .skill-category {
+    font-size: var(--text-xs);
+    font-family: var(--font-mono);
+    color: var(--color-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: var(--space-3);
+  }
+
+  .skill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .skill-item {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    background-color: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-1) var(--space-3);
+  }
+</style>

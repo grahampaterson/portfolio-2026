@@ -1,0 +1,29 @@
+---
+import styles from './Nav.module.css';
+
+const pathname = Astro.url.pathname;
+
+const links = [
+  { href: '/', label: 'Home' },
+  { href: '/work', label: 'Work' },
+  { href: '/about', label: 'About' },
+];
+---
+
+<nav class={styles.nav}>
+  <div class={`container ${styles.inner}`}>
+    <a href="/" class={styles.logo}>GH</a>
+    <ul class={styles.links}>
+      {links.map(({ href, label }) => (
+        <li>
+          <a
+            href={href}
+            class={`${styles.link} ${pathname === href || (href !== '/' && pathname.startsWith(href)) ? styles.active : ''}`}
+          >
+            {label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</nav>

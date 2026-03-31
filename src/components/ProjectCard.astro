@@ -1,0 +1,36 @@
+---
+import styles from './ProjectCard.module.css';
+import Tag from './Tag.astro';
+
+interface Props {
+  slug: string;
+  title: string;
+  description: string;
+  tags: string[];
+  year: number;
+  cover: string;
+  protected?: boolean;
+}
+
+const { slug, title, description, tags, year, cover, protected: isProtected = false } = Astro.props;
+---
+
+<a href={`/work/${slug}`} class={styles.card}>
+  {cover
+    ? <img src={cover} alt={title} class={styles.cover} loading="lazy" />
+    : <div class={styles.coverPlaceholder}>{title[0]}</div>
+  }
+  <div class={styles.body}>
+    <div class={styles.meta}>
+      <span class={styles.year}>{year}</span>
+      {isProtected && (
+        <span class={styles.lock}>&#128274; Protected</span>
+      )}
+    </div>
+    <h3 class={styles.title}>{title}</h3>
+    <p class={styles.description}>{description}</p>
+    <div class={styles.tags}>
+      {tags.map((tag) => <Tag label={tag} />)}
+    </div>
+  </div>
+</a>

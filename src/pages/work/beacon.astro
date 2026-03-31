@@ -1,0 +1,351 @@
+---
+export const prerender = true;
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Beacon Design System — Graham Holt" description="A token-based design system unifying product experience across web, mobile, and marketing surfaces.">
+  <div class="project">
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container">
+        <a href="/work" class="back">&larr; All Work</a>
+        <div class="hero-meta">
+          <span class="label">Design Systems</span>
+          <span class="year">2025</span>
+        </div>
+        <h1 class="hero-title">Beacon<br />Design System</h1>
+        <p class="hero-sub">
+          Unifying product experience across web, mobile, and marketing —
+          a token-first component library built for teams that move fast.
+        </p>
+        <div class="hero-tags">
+          {['React', 'TypeScript', 'Figma', 'Storybook', 'CSS Tokens'].map(t => (
+            <span class="tag">{t}</span>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Cover -->
+    <section class="cover-section container">
+      <div class="cover-placeholder">
+        <span class="cover-label">Beacon / Component Library</span>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats container">
+      <div class="stat">
+        <span class="stat-number">34</span>
+        <span class="stat-desc">Components shipped</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number">3</span>
+        <span class="stat-desc">Surfaces unified</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number">~90%</span>
+        <span class="stat-desc">UI pattern coverage</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number">1 day</span>
+        <span class="stat-desc">Brand refresh turnaround</span>
+      </div>
+    </section>
+
+    <!-- Content -->
+    <div class="content container">
+
+      <section class="block">
+        <h2 class="block-title">Problem</h2>
+        <p>
+          The product had grown quickly across multiple teams. Buttons had four different
+          border-radius values. The typescale was defined differently in Figma, the web
+          codebase, and the mobile codebase. Designers and engineers spent significant
+          time in every sprint re-solving the same layout, colour, and interaction problems.
+        </p>
+        <p>
+          There was no shared language — decisions made on one surface didn't propagate
+          anywhere else.
+        </p>
+      </section>
+
+      <section class="block">
+        <h2 class="block-title">Approach</h2>
+        <p>
+          I started by auditing every component in production, cataloguing what existed
+          and where the divergence points were. From there I established a token layer —
+          semantic colour, spacing, radius, and type scale — with dark and light themes
+          built in from day one.
+        </p>
+        <div class="token-grid">
+          <div class="token-group">
+            <p class="token-group-label">Color</p>
+            <div class="swatches">
+              <div class="swatch" style="background:#c8ff57" title="Accent"></div>
+              <div class="swatch" style="background:#e8e8e8" title="Text"></div>
+              <div class="swatch" style="background:#888" title="Muted"></div>
+              <div class="swatch" style="background:#1a1a1a" title="Surface"></div>
+              <div class="swatch" style="background:#2e2e2e" title="Border"></div>
+            </div>
+          </div>
+          <div class="token-group">
+            <p class="token-group-label">Radius</p>
+            <div class="radius-row">
+              <div class="radius-demo" style="border-radius:4px">sm</div>
+              <div class="radius-demo" style="border-radius:8px">md</div>
+              <div class="radius-demo" style="border-radius:12px">lg</div>
+              <div class="radius-demo" style="border-radius:9999px">full</div>
+            </div>
+          </div>
+        </div>
+        <p>
+          Components were built in React with TypeScript and consumed as a package across
+          all surfaces. Each shipped with strict prop types, WCAG AA colour contrast, and
+          a Storybook story covering every meaningful variant and state.
+        </p>
+      </section>
+
+      <section class="block">
+        <h2 class="block-title">Outcome</h2>
+        <p>
+          The system launched with 34 components covering ~90% of recurring UI patterns.
+          Designer-to-developer handoff time dropped noticeably within the first quarter.
+          New surfaces could be scaffolded from Beacon primitives without inheriting
+          existing inconsistencies.
+        </p>
+        <p>
+          The token architecture made a brand refresh the following year a tractable
+          one-day task rather than a multi-sprint effort.
+        </p>
+      </section>
+
+    </div>
+
+    <!-- Footer nav -->
+    <div class="project-footer container">
+      <a href="/work" class="back">&larr; All Work</a>
+    </div>
+
+  </div>
+</BaseLayout>
+
+<style>
+  .project {
+    padding-bottom: var(--space-24);
+  }
+
+  /* Hero */
+  .hero {
+    padding-top: var(--space-12);
+    padding-bottom: var(--space-16);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .back {
+    display: inline-flex;
+    align-items: center;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-8);
+    transition: color var(--transition-fast);
+  }
+  .back:hover { color: var(--color-text); }
+
+  .hero-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  .label {
+    font-size: var(--text-xs);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-accent);
+  }
+
+  .year {
+    font-size: var(--text-xs);
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+  }
+
+  .hero-title {
+    font-size: clamp(var(--text-4xl), 8vw, 6rem);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: var(--leading-tight);
+    margin-bottom: var(--space-6);
+  }
+
+  .hero-sub {
+    font-size: var(--text-lg);
+    color: var(--color-text-muted);
+    max-width: 56ch;
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-8);
+  }
+
+  .hero-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .tag {
+    font-size: var(--text-xs);
+    font-family: var(--font-mono);
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+  }
+
+  /* Cover */
+  .cover-section {
+    padding-top: var(--space-12);
+    padding-bottom: var(--space-12);
+  }
+
+  .cover-placeholder {
+    width: 100%;
+    aspect-ratio: 16 / 7;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cover-label {
+    font-size: var(--text-sm);
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+  }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--color-border);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: var(--space-16);
+  }
+
+  .stat {
+    background: var(--color-surface);
+    padding: var(--space-8) var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .stat-number {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--color-accent);
+  }
+
+  .stat-desc {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  /* Content blocks */
+  .content {
+    max-width: 720px;
+  }
+
+  .block {
+    margin-bottom: var(--space-16);
+  }
+
+  .block-title {
+    font-size: var(--text-xs);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-accent);
+    margin-bottom: var(--space-6);
+  }
+
+  .block p {
+    font-size: var(--text-base);
+    color: var(--color-text-muted);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-4);
+  }
+
+  /* Token demo */
+  .token-grid {
+    display: flex;
+    gap: var(--space-8);
+    padding: var(--space-6);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    margin: var(--space-6) 0;
+  }
+
+  .token-group-label {
+    font-size: var(--text-xs) !important;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: var(--space-3) !important;
+  }
+
+  .swatches {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .radius-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .radius-demo {
+    width: 40px;
+    height: 28px;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-xs);
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+  }
+
+  /* Footer nav */
+  .project-footer {
+    padding-top: var(--space-12);
+    border-top: 1px solid var(--color-border);
+  }
+
+  @media (max-width: 640px) {
+    .stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

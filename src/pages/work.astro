@@ -1,0 +1,74 @@
+---
+export const prerender = true;
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { getCollection } from 'astro:content';
+
+const allProjects = await getCollection('projects');
+const sorted = allProjects.sort((a, b) => b.data.year - a.data.year);
+---
+
+<BaseLayout title="Work — Graham Holt" description="Design and development projects by Graham Holt.">
+  <section class="container page">
+    <header class="page-header">
+      <h1 class="page-title">Work</h1>
+      <p class="page-desc">
+        A selection of design and development projects — products, experiments, and client work.
+      </p>
+    </header>
+
+    {sorted.length > 0 ? (
+      <div class="project-grid">
+        {sorted.map((project) => (
+          <ProjectCard
+            slug={project.id}
+            title={project.data.title}
+            description={project.data.description}
+            tags={project.data.tags}
+            year={project.data.year}
+            cover={project.data.cover}
+            protected={project.data.protected}
+          />
+        ))}
+      </div>
+    ) : (
+      <p class="empty">Projects coming soon.</p>
+    )}
+  </section>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-top: var(--space-16);
+    padding-bottom: var(--space-24);
+  }
+
+  .page-header {
+    margin-bottom: var(--space-12);
+  }
+
+  .page-title {
+    font-size: var(--text-4xl);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-4);
+  }
+
+  .page-desc {
+    font-size: var(--text-lg);
+    color: var(--color-text-muted);
+    max-width: 60ch;
+  }
+
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--space-6);
+  }
+
+  .empty {
+    color: var(--color-text-muted);
+    font-size: var(--text-lg);
+  }
+</style>

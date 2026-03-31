@@ -1,0 +1,52 @@
+---
+import { Image } from "astro:assets";
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+import type { ImageMetadata } from "astro";
+
+interface SnippetModule {
+  meta?: {
+    title?: string;
+    description?: string;
+    thumbnail?: ImageMetadata;
+  };
+}
+
+const pages = import.meta.glob<SnippetModule>("./snippets/*.astro", {
+  eager: true,
+});
+
+const links = Object.entries(pages).map(([path, mod]) => {
+  return {
+    href: path.replace("./snippets", "/snippets").replace(".astro", ""),
+    ...mod.meta,
+  };
+});
+---
+
+<BaseLayout>
+  {
+    links.map(({ href, title, description, thumbnail }) => {
+      return (
+        <a href={href}>
+          {/* {thumbnail && (
+            <Image src={thumbnail} alt={title ?? "image"} width={400} />
+          )} */}
+          <div class="linkStyle">{title}</div>
+          {/* {description} */}
+        </a>
+      );
+    })
+  }
+</BaseLayout>
+
+<style>
+  .linkStyle {
+    font-size: 40px;
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    text-align: center;
+    border-bottom: 2px solid var(--color-text);
+    color: var(--color-text);
+  }
+</style>

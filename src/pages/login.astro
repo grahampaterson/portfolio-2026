@@ -1,0 +1,154 @@
+---
+// SSR — no prerender export
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const redirect = Astro.url.searchParams.get('redirect') ?? '/work';
+
+let error = '';
+
+if (Astro.request.method === 'POST') {
+  const data = await Astro.request.formData();
+  const password = data.get('password')?.toString() ?? '';
+  const expected = import.meta.env.PORTFOLIO_PASSWORD ?? '';
+
+  if (expected && password === expected) {
+    Astro.cookies.set('portfolio_auth', expected, {
+      path: '/',
+      httpOnly: true,
+      secure: import.meta.env.PROD,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+    });
+    return Astro.redirect(redirect);
+  } else {
+    error = 'Incorrect password. Try again.';
+  }
+}
+---
+
+<BaseLayout title="Login — Graham Holt" description="Access protected portfolio content.">
+  <section class="container page">
+    <div class="login-box">
+      <h1 class="title">Protected Content</h1>
+      <p class="subtitle">This project is password-protected. Enter the password to continue.</p>
+
+      {error && <p class="error" role="alert">{error}</p>}
+
+      <form method="POST" class="form">
+        <input type="hidden" name="redirect" value={redirect} />
+        <div class="field">
+          <label for="password" class="label">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            class="input"
+            autocomplete="current-password"
+            required
+            autofocus
+          />
+        </div>
+        <button type="submit" class="btn-primary">Unlock</button>
+      </form>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-top: var(--space-16);
+    padding-bottom: var(--space-24);
+    display: flex;
+    justify-content: center;
+  }
+
+  .login-box {
+    width: 100%;
+    max-width: 400px;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8);
+  }
+
+  .title {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-2);
+  }
+
+  .subtitle {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-8);
+    line-height: var(--leading-relaxed);
+  }
+
+  .error {
+    font-size: var(--text-sm);
+    color: #ff6b6b;
+    background-color: rgba(255, 107, 107, 0.1);
+    border: 1px solid rgba(255, 107, 107, 0.3);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .label {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-text-muted);
+  }
+
+  .input {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    background-color: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--text-base);
+    outline: none;
+    transition: border-color var(--transition-fast);
+  }
+
+  .input:focus {
+    border-color: var(--color-accent);
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--space-3) var(--space-6);
+    background-color: var(--color-accent);
+    color: #0f0f0f;
+    font-weight: 700;
+    font-size: var(--text-sm);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+    border: none;
+    font-family: inherit;
+    width: 100%;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--color-accent-dark);
+  }
+</style>

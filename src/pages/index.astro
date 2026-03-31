@@ -1,0 +1,74 @@
+---
+export const prerender = true;
+
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ProjectCard from "../components/ProjectCard.astro";
+import { getCollection } from "astro:content";
+
+const allProjects = await getCollection("projects");
+const featured = allProjects.filter((p) => p.data.featured);
+---
+
+<script>
+  // const body = document.body;
+
+  // const randRange = (min: number, max: number) => {
+  //   return Math.random() * (max - min) + min;
+  // };
+
+  // setInterval(() => {
+  //   body.style.backgroundColor = `hsl(${randRange(0, 360)}, ${randRange(60, 90)}%, ${randRange(40, 60)}%)`;
+  // }, 5000);
+</script>
+
+<BaseLayout title="test title" backgroundColour="#000000">
+  <div class="container">
+    <div class="links">
+      Graham Paterson is designer with a strong interest in technology
+    </div>
+  </div>
+
+  <!-- {
+    featured.length > 0 && (
+      <section class="featured container">
+        <h2 class="section-title">Featured Projects</h2>
+        <div class="project-grid">
+          {featured.map((project) => (
+            <ProjectCard
+              slug={project.id}
+              title={project.data.title}
+              description={project.data.description}
+              tags={project.data.tags}
+              year={project.data.year}
+              cover={project.data.cover}
+              protected={project.data.protected}
+            />
+          ))}
+        </div>
+      </section>
+    )
+  } -->
+</BaseLayout>
+
+<style>
+  body {
+    transition: background-color 2000ms linear;
+  }
+  .container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-y: scroll;
+  }
+  .links {
+    font-family: var(--font-serif);
+    line-height: 0.9em;
+    letter-spacing: -0.025em;
+    color: #ffffff;
+    font-size: 80px;
+    text-align: center;
+    margin: 0 25%;
+  }
+</style>

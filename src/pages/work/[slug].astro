@@ -1,0 +1,201 @@
+---
+// SSR — no prerender export (protected projects need server-side auth via middleware)
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Tag from '../../components/Tag.astro';
+import { getEntry, render } from 'astro:content';
+
+const { slug } = Astro.params;
+
+if (!slug) return Astro.redirect('/work');
+
+const project = await getEntry('projects', slug);
+
+if (!project) {
+  return Astro.redirect('/work');
+}
+
+const { Content } = await render(project);
+---
+
+<BaseLayout title={`${project.data.title} — Graham Holt`} description={project.data.description}>
+  <article class="container page">
+    <header class="project-header">
+      <a href="/work" class="back-link">&larr; All Work</a>
+      <div class="project-meta">
+        <span class="year">{project.data.year}</span>
+        {project.data.url && (
+          <a href={project.data.url} target="_blank" rel="noopener noreferrer" class="ext-link">
+            Visit Project &rarr;
+          </a>
+        )}
+      </div>
+      <h1 class="project-title">{project.data.title}</h1>
+      <p class="project-desc">{project.data.description}</p>
+      <div class="tags">
+        {project.data.tags.map((tag) => <Tag label={tag} />)}
+      </div>
+    </header>
+
+    {project.data.cover && (
+      <div class="cover-wrap">
+        <img src={project.data.cover} alt={project.data.title} class="cover" />
+      </div>
+    )}
+
+    <div class="prose">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-top: var(--space-12);
+    padding-bottom: var(--space-24);
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-8);
+    transition: color var(--transition-fast);
+  }
+
+  .back-link:hover {
+    color: var(--color-text);
+  }
+
+  .project-header {
+    max-width: 800px;
+    margin-bottom: var(--space-12);
+  }
+
+  .project-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    margin-bottom: var(--space-4);
+  }
+
+  .year {
+    font-size: var(--text-sm);
+    font-family: var(--font-mono);
+    color: var(--color-accent);
+  }
+
+  .ext-link {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    transition: color var(--transition-fast);
+  }
+
+  .ext-link:hover {
+    color: var(--color-text);
+  }
+
+  .project-title {
+    font-size: clamp(var(--text-3xl), 5vw, var(--text-4xl));
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-4);
+  }
+
+  .project-desc {
+    font-size: var(--text-lg);
+    color: var(--color-text-muted);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-6);
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .cover-wrap {
+    margin-bottom: var(--space-12);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+  }
+
+  .cover {
+    width: 100%;
+    height: auto;
+  }
+
+  .prose {
+    max-width: 720px;
+    color: var(--color-text-muted);
+    line-height: var(--leading-relaxed);
+  }
+
+  .prose :global(h2) {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+    margin-top: var(--space-12);
+    margin-bottom: var(--space-4);
+  }
+
+  .prose :global(h3) {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: var(--color-text);
+    margin-top: var(--space-8);
+    margin-bottom: var(--space-3);
+  }
+
+  .prose :global(p) {
+    margin-bottom: var(--space-4);
+  }
+
+  .prose :global(a) {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .prose :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background-color: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 1px 6px;
+  }
+
+  .prose :global(pre) {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-6);
+    overflow-x: auto;
+    margin-bottom: var(--space-6);
+  }
+
+  .prose :global(pre code) {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: var(--text-sm);
+  }
+
+  .prose :global(ul),
+  .prose :global(ol) {
+    padding-left: var(--space-6);
+    margin-bottom: var(--space-4);
+    list-style: revert;
+  }
+
+  .prose :global(img) {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    margin-block: var(--space-6);
+  }
+</style>

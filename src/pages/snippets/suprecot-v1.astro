@@ -1,0 +1,113 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import thumbnail from "../../assets/suprecot-thumbnail.png";
+
+export const meta = {
+  title: "Suprocot Variable Font",
+  description: "A Variable font experiement",
+  thumbnail,
+};
+---
+
+<script>
+  let outer = document.getElementById("outerContainer");
+  class Row {
+    container: HTMLElement | null = null;
+    alt: boolean = true;
+    textSpan: HTMLElement[] | null = null;
+
+    constructor(container: HTMLElement) {
+      this.container = container;
+      this.textSpan = [
+        ...container.getElementsByClassName("letterBox"),
+      ] as HTMLElement[];
+    }
+
+    randomise() {
+      this.container!.style.paddingLeft = this.alt ? "1px" : "0px";
+      this.alt = !this.alt;
+
+      const slant = randInt(-15, 15);
+      const newSpec = randomSpecs(slant);
+      this.textSpan?.map((span) => {
+        span.style.fontVariationSettings = newSpec;
+      });
+    }
+  }
+
+  function randInt(min: number, max: number) {
+    return Math.floor(Math.random() * (max + 1 - min) + min);
+  }
+
+  function randomSpecs(slant: number | null = null) {
+    let width = randInt(100, 900);
+    let weight = randInt(100, 900);
+    let ital = slant == null ? randInt(-15, 15) : slant;
+    return `"wdth" ${width}, "wght" ${weight}, "slnt" ${ital}`;
+  }
+
+  let containers = document.getElementsByClassName("container");
+  let wordDrivers = [...containers].map((x) => {
+    let row = new Row(x as HTMLElement);
+    return row;
+  });
+
+  function randomise() {
+    wordDrivers.map((row) => row.randomise());
+  }
+
+  setInterval(randomise, 1000);
+</script>
+
+<BaseLayout backgroundColour="#fe5417">
+  <div id="outerContainer">
+    <div class="container"><span class="letterBox">danger8080</span></div>
+    <div class="container"><span class="letterBox">escape</span></div>
+    <div class="container"><span class="letterBox">555-525 5843</span></div>
+    <div class="container"><span class="letterBox">Sunshine</span></div>
+  </div>
+</BaseLayout>
+
+<style>
+  @font-face {
+    font-family: f7a3d9e2;
+    src: url("/fonts/f7a3d9e2.woff2") format("woff2");
+    font-display: block;
+  }
+
+  #outerContainer {
+    background-color: var(--red);
+    font-family: f7a3d9e2;
+    font-size: 25vh;
+    overflow: hidden;
+    overflow: hidden;
+    /*   border-radius: 16px; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    box-sizing: border-box;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  .container {
+    display: flex;
+    /*   border: solid 1px #444; */
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-color);
+    transition: padding 500ms linear;
+    width: 700vw;
+    line-height: 0.8em;
+  }
+
+  .letterBox {
+    color: var(--text-col);
+    transition: all 250ms linear;
+    font-variation-settings:
+      "wdth" 600,
+      "wght" 200,
+      "slnt" -10;
+  }
+</style>

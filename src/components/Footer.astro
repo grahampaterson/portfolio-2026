@@ -1,0 +1,16 @@
+---
+import styles from './Footer.module.css';
+
+const year = new Date().getFullYear();
+---
+
+<footer class={styles.footer}>
+  <div class={`container ${styles.inner}`}>
+    <p class={styles.copy}>&copy; {year} Graham Holt. All rights reserved.</p>
+    <nav class={styles.links}>
+      <a href="https://github.com" class={styles.link} target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href="https://linkedin.com" class={styles.link} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      <a href="mailto:hello@example.com" class={styles.link}>Email</a>
+    </nav>
+  </div>
+</footer>
