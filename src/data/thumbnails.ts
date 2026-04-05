@@ -63,4 +63,8 @@ export const thumbnails: Thumbnail[] = [
     ],
     title: "Figma Plugins",
   },
+  {
+    filename: ["/thumbnail-gallery/fin-ui01.jpg"],
+    title: "Fin UI",
+  },
 ];

@@ -1,0 +1,102 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+export const meta = {
+  title: "Calgary Tower Silhouette",
+  description: "Looping silhouette",
+};
+---
+
+<script>
+  const COUNT = 7;
+  let instances: HTMLElement[] = [];
+  const container = document.getElementById("outerContainer");
+  const svgBase = document.getElementById("svgBase");
+  const minWidth = Math.min(window.innerWidth, innerHeight);
+
+  let previousBgColor = "#ff0000";
+
+  const main = () => {
+    if (container == null || svgBase == null) return;
+
+    for (let i = 0; i < COUNT; i++) {
+      const clone = svgBase.cloneNode(true) as HTMLElement;
+      clone.id = `node-${i}`;
+      container.prepend(clone);
+      instances.push(clone);
+      let scale = i / COUNT;
+      clone.style.scale = `${scale}`;
+      clone.style.display = "block";
+      clone.setAttribute("fill", `hsl(${Math.random() * 360}, 60%, 50%)`);
+    }
+
+    svgBase.style.display = "block";
+  };
+
+  let previousTimestamp = 0;
+  const animate = (timestamp: number) => {
+    const deltaTime = (timestamp - previousTimestamp) / 1000;
+    [...instances].map((n, i) => {
+      const currentScale = Number(n.style.scale);
+      n.style.scale = `${currentScale - 0.2 * deltaTime}`;
+      if (currentScale <= 0) {
+        container?.prepend(n);
+        instances.unshift(instances.splice(i, 1)[0]);
+        n.style.scale = "1";
+        n.setAttribute("fill", previousBgColor);
+        previousBgColor = `hsl(${Math.random() * 360}, 60%, 50%)`;
+        svgBase?.setAttribute("fill", previousBgColor);
+      }
+    });
+    previousTimestamp = timestamp;
+    requestAnimationFrame(animate);
+  };
+
+  main();
+  requestAnimationFrame(animate);
+</script>
+
+<BaseLayout backgroundColour="#000">
+  <div id="bgContainer">
+    <svg
+      width="590"
+      height="487"
+      viewBox="0 0 590 487"
+      fill="#00ff00"
+      xmlns="http://www.w3.org/2000/svg"
+      id="svgBase"
+      class="svgIlly"
+    >
+      <path
+        d="M385.482 37.6447V5.43202C385.482 2.43199 383.045 0 380.039 0H209.96C206.954 0 204.517 2.43199 204.517 5.43202V37.6447C204.517 40.4422 202.385 42.7865 199.594 43.0503C42.8451 57.8914 0 106.811 0 106.811L39.2179 145.951L70.5918 411.192C111.775 411.192 148.599 436.791 162.875 475.343L165.877 483.451C166.667 485.584 168.704 487 170.982 487H419.017C421.295 487 423.332 485.584 424.122 483.451L427.125 475.343C441.401 436.79 478.226 411.192 519.407 411.192L550.782 145.951L590 106.811C590 106.811 547.154 57.8914 390.405 43.0503C387.614 42.7865 385.482 40.4422 385.482 37.6447Z"
+      ></path>
+    </svg>
+  </div>
+  <div id="outerContainer"></div>
+</BaseLayout>
+
+<style>
+  #outerContainer {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    scale: 1.2;
+  }
+  #bgContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    scale: 1.2;
+  }
+  .svgIlly {
+    display: none;
+    position: absolute;
+  }
+</style>
