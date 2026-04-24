@@ -2,59 +2,39 @@
 export const prerender = true;
 
 import BaseLayout from "../layouts/BaseLayout.astro";
-import ProjectCard from "../components/ProjectCard.astro";
 import { getCollection } from "astro:content";
+import ThumbnailViewer from "../components/ThumbnailViewer.astro";
 
 const allProjects = await getCollection("projects");
 const featured = allProjects.filter((p) => p.data.featured);
 ---
 
-<script>
-  // const body = document.body;
-
-  // const randRange = (min: number, max: number) => {
-  //   return Math.random() * (max - min) + min;
-  // };
-
-  // setInterval(() => {
-  //   body.style.backgroundColor = `hsl(${randRange(0, 360)}, ${randRange(60, 90)}%, ${randRange(40, 60)}%)`;
-  // }, 5000);
-</script>
-
 <BaseLayout title="🍝🍝🍝🍝" backgroundColour="#000000">
   <div class="container">
+    <ThumbnailViewer />
     <div class="links">
-      Graham Paterson is designer with a strong interest in technology
+      <p>Graham Paterson is designer with a strong interest in technology</p>
     </div>
   </div>
-
-  <!-- {
-    featured.length > 0 && (
-      <section class="featured container">
-        <h2 class="section-title">Featured Projects</h2>
-        <div class="project-grid">
-          {featured.map((project) => (
-            <ProjectCard
-              slug={project.id}
-              title={project.data.title}
-              description={project.data.description}
-              tags={project.data.tags}
-              year={project.data.year}
-              cover={project.data.cover}
-              protected={project.data.protected}
-            />
-          ))}
-        </div>
-      </section>
-    )
-  } -->
 </BaseLayout>
+
+<script>
+  const links = document.querySelector(".links");
+  const viewer = document.querySelector<HTMLElement>("#viewer");
+  links?.addEventListener("mouseenter", () =>
+    viewer?.style.setProperty("opacity", "0.3"),
+  );
+  links?.addEventListener("mouseleave", () =>
+    viewer?.style.setProperty("opacity", "1"),
+  );
+</script>
 
 <style>
   body {
     transition: background-color 2000ms linear;
   }
   .container {
+    position: relative;
     width: 100vw;
     height: 100vh;
     display: flex;
@@ -62,6 +42,7 @@ const featured = allProjects.filter((p) => p.data.featured);
     align-items: center;
     overflow-y: scroll;
   }
+
   .links {
     font-family: var(--font-serif);
     line-height: 0.9em;
@@ -70,5 +51,6 @@ const featured = allProjects.filter((p) => p.data.featured);
     font-size: 80px;
     text-align: center;
     margin: 0 25%;
+    z-index: 10;
   }
 </style>
