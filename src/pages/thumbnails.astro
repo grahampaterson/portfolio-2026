@@ -5,59 +5,24 @@ import { thumbnails } from "../data/thumbnails";
 let startIndex = Math.floor(Math.random() * thumbnails.length);
 ---
 
-<BaseLayout>
-  <div id="viewer">
+<BaseLayout backgroundColour="#000000">
+  <div id="viewer" data-start-index={startIndex}>
     <img id="current-image" src={thumbnails[startIndex].filename[0]} />
-    <video loop id="current-video">
+    <video loop id="current-video" playsinline>
       <source src="" type="video/webm" id="vid-source" />
     </video>
   </div>
 </BaseLayout>
 
-<script is:inline define:vars={{ thumbnails, startIndex }}>
-  const img = document.getElementById("current-image");
-  const vid = document.getElementById("current-video");
-  const vidSrc = document.getElementById("vid-source");
-  let remaining = Array.from(Array(thumbnails.length)).map((_, i) => i);
-  remaining.splice(startIndex, 1);
-
-  let projectIndex = startIndex;
-  let imageIndex = 0;
-
-  document.getElementById("viewer").addEventListener("click", () => {
-    // randomises the order but always progresses throught he current sequence
-    if (imageIndex === thumbnails[projectIndex].filename.length - 1) {
-      imageIndex = 0;
-      if (remaining.length === 1) {
-        remaining = Array.from(Array(thumbnails.length)).map((_, i) => i);
-        remaining.splice(projectIndex, 1);
-      }
-      let randomIndex = Math.floor(Math.random() * remaining.length);
-      projectIndex = remaining[randomIndex];
-      remaining.splice(randomIndex, 1);
-    } else {
-      imageIndex = imageIndex + 1;
-    }
-
-    let filename = thumbnails[projectIndex].filename[imageIndex];
-    if (filename.search("webm") > -1) {
-      vid.style.display = "block";
-      img.style.display = "none";
-      vidSrc.src = filename;
-      vid.load();
-      vid.play();
-    } else {
-      vid.style.display = "none";
-      img.style.display = "block";
-      img.src = filename;
-    }
-  });
+<script>
+  import { initScript } from "../scripts/thumbnails.ts";
+  initScript();
 </script>
 
 <style>
   #viewer {
     width: 100vw;
-    height: 100vh;
+    height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;
