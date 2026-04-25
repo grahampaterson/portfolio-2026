@@ -6,7 +6,6 @@ import { getCollection } from "astro:content";
 import ThumbnailViewer from "../components/ThumbnailViewer.astro";
 
 const allProjects = await getCollection("projects");
-const featured = allProjects.filter((p) => p.data.featured);
 ---
 
 <BaseLayout title="🍝🍝🍝🍝" backgroundColour="#000000">
@@ -25,7 +24,7 @@ const featured = allProjects.filter((p) => p.data.featured);
     viewer?.style.setProperty("opacity", "0.3"),
   );
   links?.addEventListener("mouseleave", () =>
-    viewer?.style.setProperty("opacity", "1"),
+    viewer?.style.setProperty("opacity", ".8"),
   );
 </script>
 
@@ -52,5 +51,13 @@ const featured = allProjects.filter((p) => p.data.featured);
     text-align: center;
     margin: 0 25%;
     z-index: 10;
+    filter: drop-shadow(0px 8px 16px hsla(0, 0%, 0%, 0.25));
+  }
+
+  @media (max-width: 768px) {
+    .links {
+      font-size: 48px;
+      margin: 0 10%;
+    }
   }
 </style>
