@@ -5,6 +5,23 @@ type Thumbnail = {
 
 export const thumbnails: Thumbnail[] = [
   {
+    filename: ["/thumbnail-gallery/aurora01.png"],
+    title: "Aurora Identity",
+  },
+  {
+    filename: ["/thumbnail-gallery/neo-exploration01.jpg"],
+    title: "Neo brand exploration",
+  },
+  {
+    filename: [
+      "/thumbnail-gallery/calgary00.png",
+      "/thumbnail-gallery/calgary01.png",
+      "/thumbnail-gallery/calgary02.png",
+      "/thumbnail-gallery/calgary03.png",
+    ],
+    title: "Calgary display font",
+  },
+  {
     filename: [
       "/thumbnail-gallery/suprecot01.png",
       "/thumbnail-gallery/suprecot02.jpg",
