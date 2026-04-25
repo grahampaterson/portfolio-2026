@@ -9,6 +9,10 @@ export const thumbnails: Thumbnail[] = [
     title: "Aurora Identity",
   },
   {
+    filename: ["/thumbnail-gallery/neo-widgets.png"],
+    title: "Neo Widgets",
+  },
+  {
     filename: ["/thumbnail-gallery/neo-exploration01.jpg"],
     title: "Neo brand exploration",
   },
