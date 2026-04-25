@@ -44,7 +44,10 @@ export const initScript = () => {
     }
   };
 
+  // initialise
   setThumbnail();
+  viewer.style.visibility = "visible";
 
+  // set up listener
   viewer.addEventListener("click", setThumbnail);
 };
