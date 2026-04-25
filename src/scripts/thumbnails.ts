@@ -1,20 +1,21 @@
 import { thumbnails } from "../data/thumbnails";
 
 export const initScript = () => {
+  const startIndex = Math.floor(Math.random() * thumbnails.length);
+
   const viewer = document.querySelector<HTMLDivElement>("#viewer");
   const img = document.querySelector<HTMLImageElement>("#current-image");
   const vid = document.querySelector<HTMLVideoElement>("#current-video");
   const vidSrc = document.querySelector<HTMLSourceElement>("#vid-source");
   if (!(viewer && vid && img && vidSrc)) return;
 
-  const startIndex = Number(viewer.dataset.startIndex);
   let remaining = Array.from(Array(thumbnails.length)).map((_, i) => i);
   remaining.splice(startIndex, 1);
 
   let projectIndex = startIndex;
   let imageIndex = 0;
 
-  viewer.addEventListener("click", () => {
+  const setThumbnail = () => {
     // randomises the order but always progresses throught he current sequence
     if (imageIndex === thumbnails[projectIndex].filename.length - 1) {
       imageIndex = 0;
@@ -41,5 +42,9 @@ export const initScript = () => {
       img.style.display = "block";
       img.src = filename;
     }
-  });
+  };
+
+  setThumbnail();
+
+  viewer.addEventListener("click", setThumbnail);
 };

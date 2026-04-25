@@ -1,12 +1,10 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { thumbnails } from "../data/thumbnails";
-
-let startIndex = Math.floor(Math.random() * thumbnails.length);
 ---
 
-<div id="viewer" data-start-index={startIndex}>
-  <img id="current-image" src={thumbnails[startIndex].filename[0]} />
+<div id="viewer">
+  <img id="current-image" src="" />
   <video loop id="current-video" playsinline>
     <source src="" type="video/webm" id="vid-source" />
   </video>
