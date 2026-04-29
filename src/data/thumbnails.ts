@@ -5,6 +5,10 @@ type Thumbnail = {
 
 export const thumbnails: Thumbnail[] = [
   {
+    filename: ["/thumbnail-gallery/ws-ds01.png"],
+    title: "Wealthsimple Design System",
+  },
+  {
     filename: ["/thumbnail-gallery/aurora01.png"],
     title: "Aurora Identity",
   },
