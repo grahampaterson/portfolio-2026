@@ -4,8 +4,19 @@ type Thumbnail = {
 };
 
 export const thumbnails: Thumbnail[] = [
-    {
-    filename: ["/thumbnail-gallery/neo-merch-01.jpg","/thumbnail-gallery/neo-merch-02.jpg","/thumbnail-gallery/neo-merch-03.jpg"],
+  {
+    filename: [
+      "/thumbnail-gallery/camera02.webm",
+      "/thumbnail-gallery/camera03.webm",
+    ],
+    title: "True hockey",
+  },
+  {
+    filename: [
+      "/thumbnail-gallery/neo-merch-01.jpg",
+      "/thumbnail-gallery/neo-merch-02.jpg",
+      "/thumbnail-gallery/neo-merch-03.jpg",
+    ],
     title: "Neo Merch",
   },
   {
