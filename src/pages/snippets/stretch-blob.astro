@@ -1,0 +1,259 @@
+---
+export const meta = {
+  title: "Stretch Blob",
+  description:
+    "Variable font with SVG blob filter controlled by a single slider",
+};
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stretch Blob</title>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position:absolute">
+      <defs>
+        <filter
+          id="blob"
+          color-interpolation-filters="sRGB"
+          x="-50%"
+          y="-50%"
+          width="200%"
+          height="200%"
+        >
+          <feGaussianBlur in="SourceGraphic" stdDeviation="0" result="blur"
+          ></feGaussianBlur>
+          <feColorMatrix
+            in="blur"
+            type="matrix"
+            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 50 -20"
+          ></feColorMatrix>
+        </filter>
+      </defs>
+    </svg>
+
+    <div id="stage">
+      <div id="text-wrap">
+        <span id="word" class="words">EATS</span>
+        <span id="word" class="words">RATES</span>
+        <span id="word" class="words">STAR</span>
+        <span id="word" class="words">HATE</span>
+      </div>
+    </div>
+
+    <div id="controls">
+      <div class="control-row">
+        <label>stretch</label>
+        <input type="range" id="slider" min="0" max="100" value="0" />
+      </div>
+      <div class="control-row">
+        <label>multiply <span id="multiply-val">50</span></label>
+        <input type="range" id="multiply-slider" min="1" max="80" value="50" />
+      </div>
+      <div class="control-row">
+        <label>threshold <span id="threshold-val">-10</span></label>
+        <input
+          type="range"
+          id="threshold-slider"
+          min="-80"
+          max="0"
+          value="-10"
+        />
+      </div>
+      <div class="control-row">
+        <label>max blur <span id="max-blur-val">8</span></label>
+        <input type="range" id="max-blur-slider" min="0" max="20" value="8" />
+      </div>
+      <button id="blur-toggle">blur off</button>
+    </div>
+  </body>
+</html>
+
+<script>
+  const slider = document.getElementById("slider") as HTMLInputElement;
+  const multiplySlider = document.getElementById(
+    "multiply-slider",
+  ) as HTMLInputElement;
+  const thresholdSlider = document.getElementById(
+    "threshold-slider",
+  ) as HTMLInputElement;
+  const maxBlurSlider = document.getElementById(
+    "max-blur-slider",
+  ) as HTMLInputElement;
+  const multiplyVal = document.getElementById("multiply-val") as HTMLElement;
+  const thresholdVal = document.getElementById("threshold-val") as HTMLElement;
+  const maxBlurVal = document.getElementById("max-blur-val") as HTMLElement;
+  const words = [...document.getElementsByClassName("words")] as HTMLElement[];
+  const blurFilter = document.querySelector(
+    "#blob feGaussianBlur",
+  ) as SVGFEGaussianBlurElement;
+  const colorMatrix = document.querySelector(
+    "#blob feColorMatrix",
+  ) as SVGFEColorMatrixElement;
+
+  const MIN_STCH = 0;
+  const MAX_STCH = 100;
+  const MAX_BLUR = 8;
+  let blurEnabled = true;
+
+  const toggleBtn = document.getElementById("blur-toggle") as HTMLButtonElement;
+  toggleBtn.addEventListener("click", () => {
+    blurEnabled = !blurEnabled;
+    toggleBtn.textContent = blurEnabled ? "blur off" : "blur on";
+    updateAll();
+  });
+  debugger;
+  function updateAll() {
+    const t = Number(slider.value) / 100;
+    const stch = MIN_STCH + t * (MAX_STCH - MIN_STCH);
+    const maxBlur = Number(maxBlurSlider.value);
+    const blur = blurEnabled ? t * maxBlur : 0;
+    const multiply = Number(multiplySlider.value);
+    const threshold = Number(thresholdSlider.value);
+
+    words.forEach((w) => {
+      w.style.fontVariationSettings = `"STCH" ${stch}`;
+    });
+
+    blurFilter.setAttribute("stdDeviation", String(blur));
+    colorMatrix.setAttribute(
+      "values",
+      `1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 ${multiply} ${threshold}`,
+    );
+
+    multiplyVal.textContent = String(multiply);
+    thresholdVal.textContent = String(threshold);
+    maxBlurVal.textContent = String(maxBlur);
+  }
+
+  slider.addEventListener("input", updateAll);
+  multiplySlider.addEventListener("input", updateAll);
+  thresholdSlider.addEventListener("input", updateAll);
+  maxBlurSlider.addEventListener("input", updateAll);
+  updateAll();
+</script>
+
+<style>
+  @font-face {
+    font-family: "Stretch";
+    src: url("/fonts/StretchVF.ttf") format("truetype");
+    font-display: block;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: #0a0a0a;
+    color: #f0f0f0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  #stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  #text-wrap {
+    filter: url(#blob);
+    font-size: clamp(4rem, 15vw, 8rem);
+    line-height: 0.8em;
+  }
+
+  #word {
+    font-family: "Stretch", sans-serif;
+
+    font-variation-settings: "STCH" 100;
+    /* line-height: 1; */
+    display: block;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  #controls {
+    padding: 4rem 2rem;
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 1rem;
+    flex-direction: column;
+  }
+
+  .control-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .control-row label {
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    color: #666;
+    width: 9rem;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  #blur-toggle {
+    background: none;
+    border: 1px solid #444;
+    color: #f0f0f0;
+    padding: 0.4rem 1rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    border-radius: 1000px;
+    display: none;
+  }
+
+  #blur-toggle:hover {
+    border-color: #f0f0f0;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 2px;
+    background: #333;
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    cursor: pointer;
+    border: none;
+  }
+</style>
