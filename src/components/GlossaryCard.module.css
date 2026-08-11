@@ -1,0 +1,55 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--transition-base), transform var(--transition-base);
+}
+
+.card:hover {
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+}
+
+.term {
+  font-family: var(--font-serif);
+  font-size: var(--text-3xl);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: var(--leading-tight);
+  color: var(--color-text);
+}
+
+.description {
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-muted);
+}
+
+/* The description is rendered markdown, so style its children directly. */
+.description :global(p + p) {
+  margin-top: var(--space-4);
+}
+
+.description :global(strong) {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.description :global(a) {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: border-color var(--transition-base);
+  }
+
+  .card:hover {
+    transform: none;
+  }
+}

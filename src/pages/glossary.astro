@@ -1,0 +1,169 @@
+---
+export const prerender = true;
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import GlossaryCard from '../components/GlossaryCard.astro';
+import { getCollection, render } from 'astro:content';
+
+const entries = (await getCollection('glossary')).sort((a, b) =>
+  a.data.term.localeCompare(b.data.term),
+);
+
+// Match against the raw body rather than rendering twice, but strip the
+// markdown syntax first — otherwise "the qwerty effect" misses "the **QWERTY
+// effect**".
+const toSearchIndex = (term: string, body: string) =>
+  `${term} ${body}`
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/[*_`#>]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+
+const terms = await Promise.all(
+  entries.map(async (entry) => ({
+    term: entry.data.term,
+    search: toSearchIndex(entry.data.term, entry.body ?? ''),
+    Content: (await render(entry)).Content,
+  })),
+);
+---
+
+<BaseLayout
+  title="Glossary — Graham"
+  description="A glossary of UX terms and the ideas behind them."
+>
+  <section class="page">
+    <header class="header">
+      <h1 class="title">Glossary</h1>
+      <p class="intro">
+        Terms I keep reaching for — some from UX proper, some borrowed from
+        economics, psychology, and wherever else the idea was named first.
+      </p>
+      <label class="searchLabel" for="glossary-search">Search terms</label>
+      <input
+        id="glossary-search"
+        class="search"
+        type="search"
+        placeholder="Search terms…"
+        autocomplete="off"
+      />
+    </header>
+
+    <ul class="grid" id="glossary-grid">
+      {
+        terms.map(({ term, search, Content }) => (
+          <li data-search={search}>
+            <GlossaryCard term={term}>
+              <Content />
+            </GlossaryCard>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="empty" id="glossary-empty" hidden>No terms match that search.</p>
+  </section>
+</BaseLayout>
+
+<script>
+  const input = document.querySelector<HTMLInputElement>('#glossary-search');
+  const grid = document.querySelector<HTMLElement>('#glossary-grid');
+  const empty = document.querySelector<HTMLElement>('#glossary-empty');
+
+  if (input && grid && empty) {
+    const items = Array.from(grid.querySelectorAll<HTMLLIElement>('li'));
+
+    input.addEventListener('input', () => {
+      const query = input.value.trim().toLowerCase();
+      let visible = 0;
+
+      for (const item of items) {
+        const match = query === '' || (item.dataset.search ?? '').includes(query);
+        item.hidden = !match;
+        if (match) visible += 1;
+      }
+
+      empty.hidden = visible > 0;
+    });
+  }
+</script>
+
+<style>
+  .page {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: var(--space-24) var(--space-6);
+  }
+
+  .header {
+    max-width: 44rem;
+    margin-bottom: var(--space-16);
+  }
+
+  .title {
+    font-family: var(--font-serif);
+    font-size: var(--text-5xl);
+    font-weight: 400;
+    letter-spacing: -0.025em;
+  }
+
+  .intro {
+    margin-top: var(--space-4);
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    color: var(--color-text-muted);
+  }
+
+  /* Visible to screen readers only — the placeholder carries the visual label. */
+  .searchLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .search {
+    margin-top: var(--space-8);
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    font: inherit;
+    color: var(--color-text);
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    transition: border-color var(--transition-base);
+  }
+
+  .search:focus-visible {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--space-6);
+  }
+
+  .empty {
+    color: var(--color-text-muted);
+  }
+
+  .empty[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    .page {
+      padding: var(--space-16) var(--space-4);
+    }
+
+    .title {
+      font-size: var(--text-4xl);
+    }
+  }
+</style>
