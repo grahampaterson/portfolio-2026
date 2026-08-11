@@ -75,11 +75,15 @@ export const meta = {
     font-display: block;
   }
 
+  /* .container below is 700vw wide — clip it at the viewport. */
+  :global(html) {
+    overflow: hidden;
+  }
+
   #outerContainer {
     background-color: var(--red);
     font-family: f7a3d9e2;
     font-size: 25vh;
-    overflow: hidden;
     overflow: hidden;
     /*   border-radius: 16px; */
     display: flex;

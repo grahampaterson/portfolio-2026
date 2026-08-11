@@ -76,6 +76,11 @@ export const meta = {
 </BaseLayout>
 
 <style>
+  /* Full-viewport canvas scaled past the edges — clip rather than scroll. */
+  :global(html) {
+    overflow: hidden;
+  }
+
   #outerContainer {
     width: 100vw;
     height: 100vh;

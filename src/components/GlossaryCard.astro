@@ -1,0 +1,16 @@
+---
+import styles from './GlossaryCard.module.css';
+
+interface Props {
+  term: string;
+}
+
+const { term } = Astro.props;
+---
+
+<article class={styles.card}>
+  <h2 class={styles.term}>{term}</h2>
+  <div class={styles.description}>
+    <slot />
+  </div>
+</article>

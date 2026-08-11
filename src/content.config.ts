@@ -16,4 +16,11 @@ const projects = defineCollection({
   }),
 });
 
-export const collections = { projects };
+const glossary = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/glossary' }),
+  schema: z.object({
+    term: z.string(),
+  }),
+});
+
+export const collections = { projects, glossary };

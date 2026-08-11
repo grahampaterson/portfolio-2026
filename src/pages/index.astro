@@ -29,6 +29,11 @@ const allProjects = await getCollection("projects");
 </script>
 
 <style>
+  /* The .container below owns scrolling; without this the page double-scrolls. */
+  :global(html) {
+    overflow: hidden;
+  }
+
   body {
     transition: background-color 2000ms linear;
   }
