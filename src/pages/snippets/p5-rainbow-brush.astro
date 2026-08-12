@@ -1,0 +1,118 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+export const meta = {
+  title: "P5 Rainbow Brush",
+  description: "A noise-driven rainbow paintbrush",
+};
+---
+
+<script>
+  import p5 from "p5";
+
+  new p5((p: any) => {
+    const cols = [0, 0.3, 0.23];
+    let previousPos:
+      | { x1: number; y1: number; x2: number; y2: number }
+      | undefined;
+    const strokeWidth = 3;
+
+    p.setup = () => {
+      p.createCanvas(window.innerWidth, window.innerHeight);
+      p.pixelDensity(2);
+      p.frameRate(60);
+      p.background(0, 0, 0);
+    };
+
+    p.draw = () => {
+      if (p.mouseIsPressed) {
+        paint();
+      }
+    };
+
+    function perpendicularBisector(
+      x1: number,
+      y1: number,
+      x2: number,
+      y2: number,
+      length: number,
+    ) {
+      const mx = (x1 + x2) / 2;
+      const my = (y1 + y2) / 2;
+
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const len = Math.sqrt(dx * dx + dy * dy);
+
+      if (len === 0) {
+        // Points are identical — no defined direction, skip this frame.
+        return undefined;
+      }
+
+      const ux = -dy / len;
+      const uy = dx / len;
+      const half = length / 2;
+
+      return {
+        x1: mx + ux * half,
+        y1: my + uy * half,
+        x2: mx - ux * half,
+        y2: my - uy * half,
+      };
+    }
+
+    const paint = () => {
+      const [r, g, b] = cols.map((n, i) => {
+        const val = n + 0.01;
+        cols[i] = val;
+        return p.noise(val + i * 1000) * 255;
+      });
+
+      p.noFill();
+      p.stroke(r, g, b);
+      p.strokeWeight(strokeWidth);
+
+      const perpBis = perpendicularBisector(
+        p.mouseX,
+        p.mouseY,
+        p.pmouseX,
+        p.pmouseY,
+        150,
+      );
+
+      if (perpBis === undefined) {
+        return;
+      }
+
+      const { x1, y1, x2, y2 } = perpBis;
+
+      if (p.pmouseX === p.mouseX && p.pmouseY === p.mouseY) return;
+
+      const dM = p.dist(p.mouseX, p.mouseY, p.pmouseX, p.pmouseY);
+      if (dM > strokeWidth / 2 && previousPos !== undefined) {
+        const intervals = Math.floor((dM / strokeWidth) * 2);
+        const increment = 1 / (intervals + 3);
+        for (let i = increment; i < 1; i += increment) {
+          p.line(
+            p.lerp(x1, previousPos.x1, i),
+            p.lerp(y1, previousPos.y1, i),
+            p.lerp(x2, previousPos.x2, i),
+            p.lerp(y2, previousPos.y2, i),
+          );
+        }
+      } else {
+        p.line(x1, y1, x2, y2);
+      }
+
+      previousPos = { x1, y1, x2, y2 };
+    };
+  });
+</script>
+
+<BaseLayout backgroundColour="#111" title="P5 Rainbow Brush" />
+
+<style>
+  :global(html) {
+    overflow: hidden;
+  }
+</style>
