@@ -64,10 +64,11 @@ export const meta = {
         // float vignette = smoothstep(0.9, 0.25, dist);
         // color *= mix(0.55, 1.0, vignette);
         float bars = cos(st.y * steps * PI) * .5 + .5;
-        float im_smap = dot(texture2D(tDiffuse, st).xyz, vec3(0.2126, 0.7152, 0.0722));
+        vec3 imageTex = texture2D(tDiffuse, st).xyz;
+        float im_smap = dot(imageTex, vec3(0.2126, 0.7152, 0.0722));
         float wavey = (cosWaves(st, steps, 600.) + cosWaves(st, steps, 273.) + cosWaves(st, steps, 1023.)) / 3.;
         color = vec3(step(.7,im_smap + bars *(wavey *.2 + .5)));
-        // color = vec3(wavey * bars);
+        // color = imageTex;
 
         gl_FragColor = vec4(color, 1.0);
       }
@@ -125,10 +126,15 @@ export const meta = {
       return { mesh, angle, speed: 0.35 + i * 0.08 };
     });
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    directionalLight.position.set(2, 3, 4);
-    scene.add(directionalLight);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+    keyLight.position.set(2, 3, 4);
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(0xffffff, 1.1);
+    rimLight.position.set(-3, -1.5, -2);
+    scene.add(rimLight);
 
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
