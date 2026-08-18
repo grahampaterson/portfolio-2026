@@ -36,9 +36,12 @@ export const meta = {
       uniform vec2 uResolution;
       varying vec2 vUv;
 
+      #define PI 3.14
+
       void main() {
         vec2 center = vUv - 0.5;
         float dist = length(center);
+        vec2 st = gl_FragCoord.xy / uResolution.xy;
 
         // Chromatic aberration grows toward the edges.
         float aberration = dist * 0.006;
@@ -55,6 +58,7 @@ export const meta = {
         // // Vignette.
         // float vignette = smoothstep(0.9, 0.25, dist);
         // color *= mix(0.55, 1.0, vignette);
+        color = vec3(cos(st.y * 40.) * PI * .5 + .5);
 
         gl_FragColor = vec4(color, 1.0);
       }
@@ -94,8 +98,8 @@ export const meta = {
     composer.addPass(new RenderPass(scene, camera));
     const overlayPass = new ShaderPass(overlayShader);
     overlayPass.uniforms.uResolution.value.set(
-      window.innerWidth,
-      window.innerHeight,
+      renderer.getDrawingBufferSize(new THREE.Vector2()),
+      renderer.getDrawingBufferSize(new THREE.Vector2()),
     );
     overlayPass.renderToScreen = true;
     composer.addPass(overlayPass);
