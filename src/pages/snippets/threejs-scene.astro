@@ -58,7 +58,9 @@ export const meta = {
         // // Vignette.
         // float vignette = smoothstep(0.9, 0.25, dist);
         // color *= mix(0.55, 1.0, vignette);
-        color = vec3(cos(st.y * 40.) * PI * .5 + .5);
+        float bars = cos(st.y * 80. * PI) * .5 + .5;
+        vec2 im_smap = texture2D(tDiffuse, st).xy;
+        color = vec3(step(.7,im_smap.y + bars));
 
         gl_FragColor = vec4(color, 1.0);
       }
@@ -97,8 +99,7 @@ export const meta = {
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
     const overlayPass = new ShaderPass(overlayShader);
-    overlayPass.uniforms.uResolution.value.set(
-      renderer.getDrawingBufferSize(new THREE.Vector2()),
+    overlayPass.uniforms.uResolution.value.copy(
       renderer.getDrawingBufferSize(new THREE.Vector2()),
     );
     overlayPass.renderToScreen = true;
@@ -118,9 +119,8 @@ export const meta = {
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
       composer.setSize(window.innerWidth, window.innerHeight);
-      overlayPass.uniforms.uResolution.value.set(
-        window.innerWidth,
-        window.innerHeight,
+      overlayPass.uniforms.uResolution.value.copy(
+        renderer.getDrawingBufferSize(new THREE.Vector2()),
       );
     };
     window.addEventListener("resize", onResize);
