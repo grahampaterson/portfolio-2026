@@ -1,0 +1,143 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+export const meta = {
+  title: "Three.js Scene",
+  description: "Minimal rotating cube scene",
+};
+---
+
+<script>
+  import * as THREE from "three";
+  import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+  import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+  import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+
+  const container = document.getElementById("sceneContainer");
+
+  // Full-screen post-process: scanlines + a subtle chromatic-aberration
+  // vignette, applied over the rendered scene each frame.
+  const overlayShader = {
+    uniforms: {
+      tDiffuse: { value: null },
+      uTime: { value: 0 },
+      uResolution: { value: new THREE.Vector2(1, 1) },
+    },
+    vertexShader: /* glsl */ `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform sampler2D tDiffuse;
+      uniform float uTime;
+      uniform vec2 uResolution;
+      varying vec2 vUv;
+
+      void main() {
+        vec2 center = vUv - 0.5;
+        float dist = length(center);
+
+        // Chromatic aberration grows toward the edges.
+        float aberration = dist * 0.006;
+        vec2 dir = normalize(center + 1e-6);
+        float r = texture2D(tDiffuse, vUv - dir * aberration).r;
+        float g = texture2D(tDiffuse, vUv).g;
+        float b = texture2D(tDiffuse, vUv + dir * aberration).b;
+        vec3 color = vec3(r, g, b);
+
+        // Rolling scanlines.
+        float scanline = sin((vUv.y * uResolution.y - uTime * 40.0) * 1.2);
+        color -= smoothstep(0.85, 1.0, scanline) * 0.08;
+
+        // Vignette.
+        float vignette = smoothstep(0.9, 0.25, dist);
+        color *= mix(0.55, 1.0, vignette);
+
+        gl_FragColor = vec4(color, 1.0);
+      }
+    `,
+  };
+
+  const main = () => {
+    if (container == null) return;
+
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(
+      50,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100,
+    );
+    camera.position.z = 4;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    container.appendChild(renderer.domElement);
+
+    const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+    const material = new THREE.MeshStandardMaterial({ color: 0xff6f3c });
+    const cube = new THREE.Mesh(geometry, material);
+    scene.add(cube);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    directionalLight.position.set(2, 3, 4);
+    scene.add(directionalLight);
+
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    const overlayPass = new ShaderPass(overlayShader);
+    overlayPass.uniforms.uResolution.value.set(
+      window.innerWidth,
+      window.innerHeight,
+    );
+    overlayPass.renderToScreen = true;
+    composer.addPass(overlayPass);
+
+    const startTime = performance.now();
+    const animate = () => {
+      cube.rotation.x += 0.008;
+      cube.rotation.y += 0.012;
+      overlayPass.uniforms.uTime.value = (performance.now() - startTime) / 1000;
+      composer.render();
+      requestAnimationFrame(animate);
+    };
+
+    const onResize = () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      composer.setSize(window.innerWidth, window.innerHeight);
+      overlayPass.uniforms.uResolution.value.set(
+        window.innerWidth,
+        window.innerHeight,
+      );
+    };
+    window.addEventListener("resize", onResize);
+
+    animate();
+  };
+
+  main();
+</script>
+
+<BaseLayout backgroundColour="#111">
+  <div id="sceneContainer"></div>
+</BaseLayout>
+
+<style>
+  :global(html) {
+    overflow: hidden;
+  }
+
+  #sceneContainer {
+    width: 100vw;
+    height: 100vh;
+    display: block;
+  }
+</style>
