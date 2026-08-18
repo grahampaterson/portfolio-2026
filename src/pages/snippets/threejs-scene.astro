@@ -38,10 +38,15 @@ export const meta = {
 
       #define PI 3.14
 
+      float cosWaves(vec2 st, float steps, float rand) {
+        return cos(st.x * rand + uTime + floor(st.y * steps)) * .5 +.5;
+      }
+
       void main() {
         vec2 center = vUv - 0.5;
         float dist = length(center);
         vec2 st = gl_FragCoord.xy / uResolution.xy;
+        float steps = 40.;
 
         // Chromatic aberration grows toward the edges.
         float aberration = dist * 0.006;
@@ -52,15 +57,17 @@ export const meta = {
         vec3 color = vec3(r, g, b);
 
         // Rolling scanlines.
-        float scanline = sin((vUv.y * uResolution.y - uTime * 40.0) * 1.2);
+        float scanline = sin((vUv.y * uResolution.y - uTime * steps) * 1.2);
         color -= smoothstep(0.85, 1.0, scanline) * 0.08;
 
         // // Vignette.
         // float vignette = smoothstep(0.9, 0.25, dist);
         // color *= mix(0.55, 1.0, vignette);
         float bars = cos(st.y * 80. * PI) * .5 + .5;
-        vec2 im_smap = texture2D(tDiffuse, st).xy;
-        color = vec3(step(.7,im_smap.y + bars));
+        float im_smap = dot(texture2D(tDiffuse, st).xyz, vec3(0.2126, 0.7152, 0.0722));
+        float wavey = (cosWaves(st, steps, 600.) + cosWaves(st, steps, 273.) + cosWaves(st, steps, 1023.)) / 3.;
+        color = vec3(step(.7,im_smap + bars *(wavey *.2 + .5)));
+        // color = vec3(wavey * bars);
 
         gl_FragColor = vec4(color, 1.0);
       }
