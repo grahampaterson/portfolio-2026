@@ -52,9 +52,9 @@ export const meta = {
         float scanline = sin((vUv.y * uResolution.y - uTime * 40.0) * 1.2);
         color -= smoothstep(0.85, 1.0, scanline) * 0.08;
 
-        // Vignette.
-        float vignette = smoothstep(0.9, 0.25, dist);
-        color *= mix(0.55, 1.0, vignette);
+        // // Vignette.
+        // float vignette = smoothstep(0.9, 0.25, dist);
+        // color *= mix(0.55, 1.0, vignette);
 
         gl_FragColor = vec4(color, 1.0);
       }
@@ -65,6 +65,7 @@ export const meta = {
     if (container == null) return;
 
     const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xffffff);
 
     const camera = new THREE.PerspectiveCamera(
       50,
@@ -80,7 +81,7 @@ export const meta = {
     container.appendChild(renderer.domElement);
 
     const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
-    const material = new THREE.MeshStandardMaterial({ color: 0xff6f3c });
+    const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
     const cube = new THREE.Mesh(geometry, material);
     scene.add(cube);
 
@@ -126,7 +127,7 @@ export const meta = {
   main();
 </script>
 
-<BaseLayout backgroundColour="#111">
+<BaseLayout backgroundColour="#fff">
   <div id="sceneContainer"></div>
 </BaseLayout>
 
