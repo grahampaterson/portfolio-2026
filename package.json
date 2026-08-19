@@ -19,6 +19,10 @@
     "astro": "^6.4.8",
     "p5": "^2.3.0",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.185.4"
   }
 }
