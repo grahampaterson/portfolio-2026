@@ -23,6 +23,8 @@ const toSearchIndex = (term: string, body: string) =>
 const terms = await Promise.all(
   entries.map(async (entry) => ({
     term: entry.data.term,
+    emoji: entry.data.emoji,
+    emojiAlt: entry.data.emojiAlt,
     search: toSearchIndex(entry.data.term, entry.body ?? ''),
     Content: (await render(entry)).Content,
   })),
@@ -52,9 +54,9 @@ const terms = await Promise.all(
 
     <ul class="grid" id="glossary-grid">
       {
-        terms.map(({ term, search, Content }) => (
+        terms.map(({ term, emoji, emojiAlt, search, Content }) => (
           <li data-search={search}>
-            <GlossaryCard term={term}>
+            <GlossaryCard term={term} emoji={emoji} emojiAlt={emojiAlt}>
               <Content />
             </GlossaryCard>
           </li>

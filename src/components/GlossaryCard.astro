@@ -3,13 +3,29 @@ import styles from './GlossaryCard.module.css';
 
 interface Props {
   term: string;
+  emoji?: string;
+  emojiAlt?: string;
 }
 
-const { term } = Astro.props;
+const { term, emoji, emojiAlt } = Astro.props;
 ---
 
 <article class={styles.card}>
-  <h2 class={styles.term}>{term}</h2>
+  <header class={styles.header}>
+    {
+      emoji && (
+        <img
+          class={styles.emoji}
+          src={`/glossary-emoji/${emoji}`}
+          alt={emojiAlt}
+          width="236"
+          height="256"
+          loading="lazy"
+        />
+      )
+    }
+    <h2 class={styles.term}>{term}</h2>
+  </header>
   <div class={styles.description}>
     <slot />
   </div>

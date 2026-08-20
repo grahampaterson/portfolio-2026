@@ -13,6 +13,19 @@
   transform: translateY(-2px);
 }
 
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* Height-capped rather than square — the emoji art isn't a fixed aspect ratio. */
+.emoji {
+  flex-shrink: 0;
+  width: auto;
+  height: 3rem;
+}
+
 .term {
   font-family: var(--font-serif);
   font-size: var(--text-3xl);

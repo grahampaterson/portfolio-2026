@@ -1,5 +1,8 @@
 ---
 term: Motte and bailey
+emoji: a11y-washing.png
+emojiAlt: >-
+  An UNO reverse card with the UNO logo replaced by the word A11Y.
 ---
 
 Borrowed from medieval fortification, by way of philosophy (Nicholas Shackel). An

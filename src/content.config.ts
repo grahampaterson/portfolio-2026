@@ -18,9 +18,17 @@ const projects = defineCollection({
 
 const glossary = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/glossary' }),
-  schema: z.object({
-    term: z.string(),
-  }),
+  schema: z
+    .object({
+      term: z.string(),
+      // Filename within public/glossary-emoji/.
+      emoji: z.string().optional(),
+      emojiAlt: z.string().optional(),
+    })
+    .refine((data) => !data.emoji || Boolean(data.emojiAlt), {
+      message: 'emojiAlt is required when emoji is set',
+      path: ['emojiAlt'],
+    }),
 });
 
 export const collections = { projects, glossary };
