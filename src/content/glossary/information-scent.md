@@ -1,5 +1,8 @@
 ---
 term: Information scent
+emoji: information-scent.png
+emojiAlt: >-
+  A hand holding an open milk carton, with wavy lines rising from the spout.
 ---
 
 When deciding which links to click on the web, users choose those with the

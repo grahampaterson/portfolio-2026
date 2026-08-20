@@ -1,5 +1,8 @@
 ---
 term: Path dependence
+emoji: qwerty-effect.png
+emojiAlt: >-
+  A single cream-coloured Q keycap, pulled off a keyboard.
 ---
 
 Borrowed from economics. A decision becomes "sticky" not because it's optimal,
