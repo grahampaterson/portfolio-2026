@@ -21,7 +21,7 @@ const glossary = defineCollection({
   schema: z
     .object({
       term: z.string(),
-      // Filename within public/glossary-emoji/.
+      // Filename within src/assets/glossary-emoji/.
       emoji: z.string().optional(),
       emojiAlt: z.string().optional(),
     })

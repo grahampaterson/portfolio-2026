@@ -1,4 +1,5 @@
 ---
+import { Image } from 'astro:assets';
 import styles from './GlossaryCard.module.css';
 
 interface Props {
@@ -8,22 +9,25 @@ interface Props {
 }
 
 const { term, emoji, emojiAlt } = Astro.props;
+
+// Eager glob so Astro can resolve each emoji's real dimensions at build time.
+const emojis = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/glossary-emoji/*.{png,webp,gif}',
+  { eager: true },
+);
+
+const source = emoji ? emojis[`../assets/glossary-emoji/${emoji}`]?.default : undefined;
+
+if (emoji && !source) {
+  throw new Error(
+    `Glossary emoji "${emoji}" not found in src/assets/glossary-emoji/ (term: ${term})`,
+  );
+}
 ---
 
 <article class={styles.card}>
   <header class={styles.header}>
-    {
-      emoji && (
-        <img
-          class={styles.emoji}
-          src={`/glossary-emoji/${emoji}`}
-          alt={emojiAlt}
-          width="236"
-          height="256"
-          loading="lazy"
-        />
-      )
-    }
+    {source && <Image class={styles.emoji} src={source} alt={emojiAlt ?? ''} loading="lazy" />}
     <h2 class={styles.term}>{term}</h2>
   </header>
   <div class={styles.description}>
