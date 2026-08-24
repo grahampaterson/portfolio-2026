@@ -2,7 +2,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
 export const meta = {
-  title: "Three.js Scene",
+  title: "Ink skull",
   description: "Rotating head model with a fragment-shader overlay",
 };
 ---
@@ -57,20 +57,31 @@ export const meta = {
         float r = texture2D(tDiffuse, vUv - dir * aberration).r;
         float g = texture2D(tDiffuse, vUv).g;
         float b = texture2D(tDiffuse, vUv + dir * aberration).b;
-        vec3 color = vec3(r, g, b);
 
         // Rolling scanlines.
         float scanline = sin((vUv.y * uResolution.y - uTime * steps) * 1.2);
-        color -= smoothstep(0.85, 1.0, scanline) * 0.08;
 
         // // Vignette.
         // float vignette = smoothstep(0.9, 0.25, dist);
         // color *= mix(0.55, 1.0, vignette);
+        float numBars=70.;
+        vec2 stP=floor(st*numBars)/numBars;
         float bars = cos(st.y * steps * PI) * .5 + .5;
-        vec3 imageTex = texture2D(tDiffuse, st).xyz;
-        float im_smap = dot(imageTex, vec3(0.2126, 0.7152, 0.0722));
-        float wavey = (cosWaves(st, steps, 600.) + cosWaves(st, steps, 273.) + cosWaves(st, steps, 1023.)) / 3.;
-        color = vec3(smoothstep(uThreshold - 0.05, uThreshold + 0.05, im_smap + bars *(wavey *.2 + .5)));
+        vec3 texColor = texture2D(tDiffuse, stP).xyz;
+
+        float band=pow(cos(st.y*PI*numBars*2.)*.5+.5,2.);
+        
+        band=band;
+        // band = stP.y;
+        
+        vec3 bands=vec3(band);
+        
+        float brightness=(texColor.r+texColor.g+texColor.b)/3.;
+        brightness = smoothstep(.4, .6, brightness);
+        vec3 blended=vec3(brightness);
+
+        vec3 color=smoothstep(.7,1.,blended+bands);
+        // color = blended;
 
         gl_FragColor = vec4(color, 1.0);
       }
