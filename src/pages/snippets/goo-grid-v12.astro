@@ -29,12 +29,14 @@ export const meta = {
 
       <div class="canvas-card">
         <div class="canvas-wrap" id="canvasWrap">
+          <div class="blob-layer" id="blobLayer"></div>
+          <div class="goo-layer" id="gooLayer"></div>
+          <div class="tint-layer"></div>
           <svg
             class="layer grid-svg"
             id="gridSvg"
             viewBox="0 0 6 6"
             preserveAspectRatio="none"></svg>
-          <div class="layer blob-layer" id="blobLayer"></div>
           <div class="layer handle-layer" id="handleLayer"></div>
         </div>
       </div>
@@ -113,6 +115,7 @@ export const meta = {
     const canvasWrap = document.getElementById("canvasWrap") as HTMLDivElement;
     const gridSvg = document.getElementById("gridSvg") as unknown as SVGSVGElement;
     const blobLayer = document.getElementById("blobLayer") as HTMLDivElement;
+    const gooLayer = document.getElementById("gooLayer") as HTMLDivElement;
     const handleLayer = document.getElementById("handleLayer") as HTMLDivElement;
     const kfStrip = document.getElementById("kfStrip") as HTMLDivElement;
     const playBtn = document.getElementById("playBtn") as HTMLButtonElement;
@@ -204,9 +207,14 @@ export const meta = {
       div.style.height = pct(r * 2);
     }
 
+    // applies the goo effect via backdrop-filter, so it reads the raw blobs
+    // sitting *behind* this layer rather than clipping its own blur to this
+    // layer's box — that's what keeps blobs from looking cut off at the edge
     function applyGooFilter(layerEl: HTMLElement) {
       const blurPx = (softness / GRID) * canvasPx;
-      layerEl.style.filter = `blur(${blurPx.toFixed(2)}px) contrast(${CONTRAST})`;
+      const value = `blur(${blurPx.toFixed(2)}px) contrast(${CONTRAST})`;
+      layerEl.style.backdropFilter = value;
+      (layerEl.style as any).webkitBackdropFilter = value;
     }
 
     // ---------- main stage rendering ----------
@@ -256,7 +264,7 @@ export const meta = {
         blobLayer.appendChild(d);
         blobDivs.push(d);
       }
-      applyGooFilter(blobLayer);
+      applyGooFilter(gooLayer);
 
       // handles
       handleLayer.innerHTML = "";
@@ -276,7 +284,7 @@ export const meta = {
         const w = entries[0].contentRect.width;
         if (w > 0) {
           canvasPx = w;
-          applyGooFilter(blobLayer);
+          applyGooFilter(gooLayer);
         }
       });
       ro.observe(canvasWrap);
@@ -497,7 +505,7 @@ export const meta = {
       const v = parseInt((e.target as HTMLInputElement).value, 10);
       softnessVal.textContent = String(v);
       softness = v / 100;
-      applyGooFilter(blobLayer);
+      applyGooFilter(gooLayer);
       keyframes.forEach((_, idx) => {
         const tile = kfStrip.children[idx];
         const wrap = tile && (tile.querySelector(".blob-layer") as HTMLElement | null);
@@ -680,15 +688,15 @@ export const meta = {
     width: 100%;
     height: 100%;
   }
-  .grid-svg {
-    z-index: 2;
-    display: block;
-    pointer-events: none;
-  }
 
+  /* 1. blobs — raw, unblurred shapes; the goo-layer above reads these
+     as its backdrop, so they stay crisp here */
   .blob-layer {
-    z-index: 1;
-    background: var(--bg);
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
   }
   .pixel {
     position: absolute;
@@ -696,8 +704,44 @@ export const meta = {
     border-radius: 16%;
   }
 
-  .handle-layer {
+  /* 2 & 3 share one oversized "bleed" box, wider than the raw blobs can ever
+     spill past the canvas (radius + blur). Nothing here is clipped — the
+     canvas has no overflow:hidden — so the goo blur and the background tint
+     both extend past the visible edge right along with the blobs themselves,
+     instead of stopping dead at the canvas boundary. */
+  .goo-layer,
+  .tint-layer {
+    position: absolute;
+    left: -20%;
+    top: -20%;
+    width: 140%;
+    height: 140%;
+    pointer-events: none;
+  }
+
+  /* 2. goo — backdrop-filter blur+contrast melts the raw blobs together */
+  .goo-layer {
+    z-index: 1;
+  }
+
+  /* 3. tint — washes the page background colour over the goo result via
+     multiply, so the white gaps between blobs read as the theme's bg
+     instead of stark white */
+  .tint-layer {
+    z-index: 2;
+    background: var(--bg);
+    mix-blend-mode: multiply;
+  }
+
+  /* 4. UI — grid reference lines and drag handles, unaffected by the above */
+  .grid-svg {
     z-index: 3;
+    display: block;
+    pointer-events: none;
+  }
+
+  .handle-layer {
+    z-index: 4;
   }
   .handle {
     position: absolute;
