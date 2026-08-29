@@ -52,7 +52,9 @@ export const meta = {
     <div class="debug-panel" id="debugPanel">
       <div class="playback">
         <button class="play-btn" id="playBtn">&#9654;</button>
-        <button class="icon-btn" id="collapseBtn" title="Collapse">&#9662;</button>
+        <button class="icon-btn" id="collapseBtn" title="Collapse"
+          >&#9662;</button
+        >
       </div>
 
       <div class="panel-body" id="panelBody">
@@ -731,6 +733,7 @@ export const meta = {
     overflow: hidden;
     overscroll-behavior: none;
     touch-action: none;
+    background-color: hsl(0, 0%, 68%);
   }
 
   /* ===== rendering (matches the reference recipe — see comment in markup) ===== */
@@ -751,6 +754,7 @@ export const meta = {
   .stage {
     position: absolute;
     inset: 0;
+    bottom: 20%;
     margin: auto;
     width: min(92vw, 92dvh, 480px);
     aspect-ratio: 1;
