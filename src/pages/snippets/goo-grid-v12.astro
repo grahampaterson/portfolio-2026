@@ -49,41 +49,47 @@ export const meta = {
       </div>
     </div>
 
-    <div class="debug-panel">
-      <div class="controls">
-        <div class="slider-row">
-          <label>Soft</label>
-          <input type="range" id="softness" min="4" max="30" value="14" />
-          <span class="slider-val" id="softnessVal">14</span>
-        </div>
-        <div class="slider-row">
-          <label>Size</label>
-          <input type="range" id="radius" min="20" max="55" value="45" />
-          <span class="slider-val" id="radiusVal">45</span>
-        </div>
-        <div class="slider-row">
-          <label>Speed</label>
-          <input
-            type="range"
-            id="speed"
-            min="250"
-            max="1600"
-            value="1000"
-            step="50"
-          />
-          <span class="slider-val" id="speedVal">1.00</span>
-        </div>
-      </div>
-
+    <div class="debug-panel" id="debugPanel">
       <div class="playback">
-        <button class="snap-btn active" id="snapBtn">Snap 1/2</button>
         <button class="play-btn" id="playBtn">&#9654;</button>
-        <button class="icon-btn" id="resetBtn" title="Reset">&#8634;</button>
+        <button class="icon-btn" id="collapseBtn" title="Collapse">&#9662;</button>
       </div>
 
-      <div class="kf-section">
-        <div class="kf-title">Keyframes</div>
-        <div class="kf-strip" id="kfStrip"></div>
+      <div class="panel-body" id="panelBody">
+        <div class="controls">
+          <div class="slider-row">
+            <label>Soft</label>
+            <input type="range" id="softness" min="4" max="30" value="14" />
+            <span class="slider-val" id="softnessVal">14</span>
+          </div>
+          <div class="slider-row">
+            <label>Size</label>
+            <input type="range" id="radius" min="20" max="55" value="45" />
+            <span class="slider-val" id="radiusVal">45</span>
+          </div>
+          <div class="slider-row">
+            <label>Speed</label>
+            <input
+              type="range"
+              id="speed"
+              min="250"
+              max="1600"
+              value="1000"
+              step="50"
+            />
+            <span class="slider-val" id="speedVal">1.00</span>
+          </div>
+        </div>
+
+        <div class="playback">
+          <button class="snap-btn active" id="snapBtn">Snap 1/2</button>
+          <button class="icon-btn" id="resetBtn" title="Reset">&#8634;</button>
+        </div>
+
+        <div class="kf-section">
+          <div class="kf-title">Keyframes</div>
+          <div class="kf-strip" id="kfStrip"></div>
+        </div>
       </div>
     </div>
   </body>
@@ -116,6 +122,7 @@ export const meta = {
       radius: number;
       softness: number;
       segDuration: number;
+      collapsed: boolean;
     };
 
     const STORAGE_KEY = "goo-grid-v12";
@@ -156,6 +163,7 @@ export const meta = {
           radius,
           softness,
           segDuration,
+          collapsed,
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       } catch {
@@ -174,6 +182,7 @@ export const meta = {
     let radius = saved?.radius ?? 0.45;
     let softness = saved?.softness ?? 0.14; // in grid units, converted to px against live stage size
     let segDuration = saved?.segDuration ?? 1000;
+    let collapsed = saved?.collapsed ?? false;
     let playing = false;
     let playSeg = 0,
       playStart = 0;
@@ -196,6 +205,10 @@ export const meta = {
     const kfStrip = document.getElementById("kfStrip") as HTMLDivElement;
     const playBtn = document.getElementById("playBtn") as HTMLButtonElement;
     const snapBtn = document.getElementById("snapBtn") as HTMLButtonElement;
+    const debugPanel = document.getElementById("debugPanel") as HTMLDivElement;
+    const collapseBtn = document.getElementById(
+      "collapseBtn",
+    ) as HTMLButtonElement;
 
     const NS = "http://www.w3.org/2000/svg";
     function svgEl(tag: string, attrs: Record<string, string | number>) {
@@ -620,6 +633,19 @@ export const meta = {
 
     playBtn.addEventListener("click", togglePlay);
 
+    // collapsed: only the header row (play/pause + this toggle) stays visible
+    function setCollapsed(v: boolean) {
+      collapsed = v;
+      debugPanel.classList.toggle("collapsed", collapsed);
+      collapseBtn.innerHTML = collapsed ? "&#9652;" : "&#9662;";
+      collapseBtn.title = collapsed ? "Expand" : "Collapse";
+    }
+
+    collapseBtn.addEventListener("click", () => {
+      setCollapsed(!collapsed);
+      saveState();
+    });
+
     (document.getElementById("resetBtn") as HTMLButtonElement).addEventListener(
       "click",
       () => {
@@ -656,6 +682,7 @@ export const meta = {
     // ---------- init ----------
     stagePx = uiStage.getBoundingClientRect().width || 350;
     syncControlsToState();
+    setCollapsed(collapsed);
     buildStageOnce();
     rebuildStrip();
     renderSelectedStatic();
@@ -865,6 +892,19 @@ export const meta = {
     border: 1.5px solid var(--line-strong);
     border-radius: 12px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  }
+  /* collapsed: only the header row (play/pause + expand toggle) stays visible */
+  .debug-panel.collapsed {
+    gap: 0;
+  }
+  .debug-panel.collapsed .panel-body {
+    display: none;
+  }
+  .panel-body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 0;
   }
 
   .icon-btn {
