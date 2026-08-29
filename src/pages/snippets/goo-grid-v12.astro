@@ -30,7 +30,8 @@ export const meta = {
       <div class="canvas-card">
         <div class="canvas-wrap" id="canvasWrap">
           <div class="blob-layer" id="blobLayer"></div>
-          <div class="goo-layer" id="gooLayer"></div>
+          <div class="goo-blur-layer" id="gooBlurLayer"></div>
+          <div class="goo-contrast-layer" id="gooContrastLayer"></div>
           <div class="tint-layer"></div>
           <svg
             class="layer grid-svg"
@@ -98,12 +99,73 @@ export const meta = {
       { x: 1.5, y: 1.5 },
     ];
 
-    let keyframes = [{ points: defaultPoints() }];
-    let selected = 0;
-    let snapStep = 0.5; // 0 = off
-    let radius = 0.45;
-    let softness = 0.14; // in grid units, converted to px against live canvas size
-    let segDuration = 1000;
+    type Point = { x: number; y: number };
+    type ThumbWrap = HTMLDivElement & { _rects: HTMLDivElement[] };
+    type SavedState = {
+      keyframes: { points: Point[] }[];
+      selected: number;
+      snapStep: number;
+      radius: number;
+      softness: number;
+      segDuration: number;
+    };
+
+    const STORAGE_KEY = "goo-grid-v12";
+
+    // reads persisted state back out of localStorage, so a reload picks up
+    // wherever you left off; returns null on anything missing/corrupt/blocked
+    // (private browsing, quota, stale shape from an older version) so the
+    // caller can fall back to defaults
+    function loadState(): SavedState | null {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        const validPoint = (p: any) =>
+          p && typeof p.x === "number" && typeof p.y === "number";
+        const validKeyframes =
+          Array.isArray(data.keyframes) &&
+          data.keyframes.length > 0 &&
+          data.keyframes.every(
+            (kf: any) =>
+              Array.isArray(kf.points) &&
+              kf.points.length === N_POINTS &&
+              kf.points.every(validPoint),
+          );
+        if (!validKeyframes) return null;
+        return data as SavedState;
+      } catch {
+        return null;
+      }
+    }
+
+    function saveState() {
+      try {
+        const data: SavedState = {
+          keyframes,
+          selected,
+          snapStep,
+          radius,
+          softness,
+          segDuration,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch {
+        // private browsing / quota exceeded — persistence is a nice-to-have, not required
+      }
+    }
+
+    const saved = loadState();
+
+    let keyframes = saved?.keyframes ?? [{ points: defaultPoints() }];
+    let selected =
+      saved && saved.selected >= 0 && saved.selected < keyframes.length
+        ? saved.selected
+        : 0;
+    let snapStep = saved?.snapStep ?? 0.5; // 0 = off
+    let radius = saved?.radius ?? 0.45;
+    let softness = saved?.softness ?? 0.14; // in grid units, converted to px against live canvas size
+    let segDuration = saved?.segDuration ?? 1000;
     let playing = false;
     let playSeg = 0,
       playStart = 0;
@@ -111,13 +173,13 @@ export const meta = {
     let blobDivs: HTMLDivElement[] = []; // fixed pool of .pixel divs for the main stage
     let canvasPx = 350; // live rendered width of canvas-wrap, kept in sync via ResizeObserver
 
-    type Point = { x: number; y: number };
-    type ThumbWrap = HTMLDivElement & { _rects: HTMLDivElement[] };
-
     const canvasWrap = document.getElementById("canvasWrap") as HTMLDivElement;
     const gridSvg = document.getElementById("gridSvg") as unknown as SVGSVGElement;
     const blobLayer = document.getElementById("blobLayer") as HTMLDivElement;
-    const gooLayer = document.getElementById("gooLayer") as HTMLDivElement;
+    const gooBlurLayer = document.getElementById("gooBlurLayer") as HTMLDivElement;
+    const gooContrastLayer = document.getElementById(
+      "gooContrastLayer",
+    ) as HTMLDivElement;
     const handleLayer = document.getElementById("handleLayer") as HTMLDivElement;
     const kfStrip = document.getElementById("kfStrip") as HTMLDivElement;
     const playBtn = document.getElementById("playBtn") as HTMLButtonElement;
@@ -209,16 +271,22 @@ export const meta = {
       div.style.height = pct(r * 2);
     }
 
-    // applies the goo effect via backdrop-filter, so it reads the raw blobs
-    // sitting *behind* this layer rather than clipping its own blur to this
-    // layer's box — that's what keeps blobs from looking cut off at the edge
-    function applyGooFilter(layerEl: HTMLElement) {
-      const blurPx = (softness / GRID) * canvasPx;
-      const value = `blur(${blurPx.toFixed(2)}px) contrast(${CONTRAST})`;
-      // -webkit- prefixed first: iOS/older Safari only recognizes that IDL
-      // name on element.style, so setting it second would be a silent no-op there
+    // -webkit- prefixed first: iOS/older Safari only recognizes that IDL
+    // name on element.style, so setting it second would be a silent no-op there
+    function setBackdropFilter(layerEl: HTMLElement, value: string) {
       (layerEl.style as any).webkitBackdropFilter = value;
       layerEl.style.backdropFilter = value;
+    }
+
+    // the goo effect reads the raw blobs sitting *behind* these layers rather
+    // than clipping its own blur to a layer's box — that's what keeps blobs
+    // from looking cut off at the edge. blur and contrast are deliberately
+    // two separate backdrop-filter layers (see .goo-blur-layer/.goo-contrast-layer)
+    // rather than one combined value, since Safari doesn't chain multiple
+    // filter functions within a single backdrop-filter reliably
+    function applyGooBlur(layerEl: HTMLElement) {
+      const blurPx = (softness / GRID) * canvasPx;
+      setBackdropFilter(layerEl, `blur(${blurPx.toFixed(2)}px)`);
     }
 
     // ---------- main stage rendering ----------
@@ -260,7 +328,8 @@ export const meta = {
         blobLayer.appendChild(d);
         blobDivs.push(d);
       }
-      applyGooFilter(gooLayer);
+      setBackdropFilter(gooContrastLayer, `contrast(${CONTRAST})`); // fixed, set once
+      applyGooBlur(gooBlurLayer);
 
       // handles
       handleLayer.innerHTML = "";
@@ -280,7 +349,7 @@ export const meta = {
         const w = entries[0].contentRect.width;
         if (w > 0) {
           canvasPx = w;
-          applyGooFilter(gooLayer);
+          applyGooBlur(gooBlurLayer);
         }
       });
       ro.observe(canvasWrap);
@@ -339,6 +408,7 @@ export const meta = {
       keyframes[selected].points[activeIndex] = p;
       renderSelectedStatic();
       updateThumb(selected);
+      saveState();
     }
 
     // ---------- keyframe strip ----------
@@ -424,6 +494,7 @@ export const meta = {
       [...kfStrip.querySelectorAll(".kf-thumb")].forEach((t, i) =>
         t.classList.toggle("selected", i === idx),
       );
+      saveState();
     }
 
     function addKeyframe() {
@@ -435,6 +506,7 @@ export const meta = {
       activeIndex = -1;
       rebuildStrip();
       renderSelectedStatic();
+      saveState();
     }
 
     function deleteKeyframe(idx: number) {
@@ -444,6 +516,7 @@ export const meta = {
       activeIndex = -1;
       rebuildStrip();
       renderSelectedStatic();
+      saveState();
     }
 
     // ---------- playback ----------
@@ -501,7 +574,7 @@ export const meta = {
       const v = parseInt((e.target as HTMLInputElement).value, 10);
       softnessVal.textContent = String(v);
       softness = v / 100;
-      applyGooFilter(gooLayer);
+      applyGooBlur(gooBlurLayer);
       keyframes.forEach((_, idx) => {
         const tile = kfStrip.children[idx];
         const wrap = tile && (tile.querySelector(".blob-layer") as HTMLElement | null);
@@ -510,6 +583,7 @@ export const meta = {
           wrap.style.filter = `blur(${blurPx.toFixed(2)}px) contrast(${CONTRAST})`;
         }
       });
+      saveState();
     });
     radiusSlider.addEventListener("input", (e) => {
       const v = parseInt((e.target as HTMLInputElement).value, 10);
@@ -517,10 +591,12 @@ export const meta = {
       radius = v / 100;
       renderSelectedStatic();
       keyframes.forEach((_, idx) => updateThumb(idx));
+      saveState();
     });
     speedSlider.addEventListener("input", (e) => {
       segDuration = parseInt((e.target as HTMLInputElement).value, 10);
       speedVal.textContent = (segDuration / 1000).toFixed(2);
+      saveState();
     });
 
     snapBtn.addEventListener("click", () => {
@@ -531,12 +607,14 @@ export const meta = {
         snapStep = 0;
         snapBtn.textContent = "Snap Off";
         snapBtn.classList.remove("active");
+        saveState();
         return;
       } else {
         snapStep = 0.5;
         snapBtn.textContent = "Snap 1/2";
       }
       snapBtn.classList.add("active");
+      saveState();
     });
 
     clearSelBtn.addEventListener("click", () => {
@@ -555,10 +633,27 @@ export const meta = {
       activeIndex = -1;
       rebuildStrip();
       renderSelectedStatic();
+      saveState();
     });
+
+    // reflects softness/radius/speed/snap loaded from storage in the actual
+    // control widgets — the JS state was restored above, but the DOM still
+    // shows whatever values are hardcoded in the markup until this runs
+    function syncControlsToState() {
+      softnessSlider.value = String(Math.round(softness * 100));
+      softnessVal.textContent = softnessSlider.value;
+      radiusSlider.value = String(Math.round(radius * 100));
+      radiusVal.textContent = radiusSlider.value;
+      speedSlider.value = String(segDuration);
+      speedVal.textContent = (segDuration / 1000).toFixed(2);
+      snapBtn.textContent =
+        snapStep === 0.5 ? "Snap 1/2" : snapStep === 0.25 ? "Snap 1/4" : "Snap Off";
+      snapBtn.classList.toggle("active", snapStep !== 0);
+    }
 
     // ---------- init ----------
     canvasPx = canvasWrap.getBoundingClientRect().width || 350;
+    syncControlsToState();
     buildStageOnce();
     rebuildStrip();
     renderSelectedStatic();
@@ -626,7 +721,7 @@ export const meta = {
     align-items: baseline;
     justify-content: space-between;
     flex-shrink: 0;
-    /* the goo/tint layers bleed past the canvas on purpose (see .goo-layer) —
+    /* the goo/tint layers bleed past the canvas on purpose (see .goo-blur-layer) —
        this keeps real UI stacked in front of that bleed rather than under it */
     position: relative;
     z-index: 10;
@@ -689,8 +784,8 @@ export const meta = {
     height: 100%;
   }
 
-  /* 1. blobs — raw, unblurred shapes; the goo-layer above reads these
-     as its backdrop, so they stay crisp here */
+  /* 1. blobs — raw, unblurred shapes; the goo layers above read these
+     as their backdrop, so they stay crisp here */
   .blob-layer {
     position: absolute;
     inset: 0;
@@ -704,12 +799,13 @@ export const meta = {
     border-radius: 16%;
   }
 
-  /* 2 & 3 share one oversized "bleed" box, wider than the raw blobs can ever
-     spill past the canvas (radius + blur). Nothing here is clipped — the
-     canvas has no overflow:hidden — so the goo blur and the background tint
-     both extend past the visible edge right along with the blobs themselves,
-     instead of stopping dead at the canvas boundary. */
-  .goo-layer,
+  /* 2, 3 & 4 share one oversized "bleed" box, wider than the raw blobs can
+     ever spill past the canvas (radius + blur). Nothing here is clipped —
+     the canvas has no overflow:hidden — so the goo effect and the
+     background tint both extend past the visible edge right along with the
+     blobs themselves, instead of stopping dead at the canvas boundary. */
+  .goo-blur-layer,
+  .goo-contrast-layer,
   .tint-layer {
     position: absolute;
     left: -20%;
@@ -719,29 +815,58 @@ export const meta = {
     pointer-events: none;
   }
 
-  /* 2. goo — backdrop-filter blur+contrast melts the raw blobs together */
-  .goo-layer {
+  /* 2 & 3. goo — blur and contrast are deliberately two stacked layers
+     rather than one `backdrop-filter: blur() contrast()`. Safari doesn't
+     reliably chain multiple filter functions within a single
+     backdrop-filter; each layer here reads the (already filtered) result
+     of everything painted behind it, so contrast picks up the blur layer's
+     output the same way in every browser. */
+  .goo-blur-layer {
     z-index: 1;
   }
+  .goo-contrast-layer {
+    z-index: 2;
+  }
 
-  /* 3. tint — washes the page background colour over the goo result via
+  /* Safari doesn't reliably re-sample backdrop-filter on its own each frame
+     when only the content *behind* the filtered layer changes — which is
+     exactly what happens during playback, where the raw blob divs move but
+     these two layers never do. The visible symptom is the goo shape
+     freezing on a stale frame while the keyframe animation still runs
+     underneath. A continuous, imperceptible no-op animation keeps each
+     layer "dirty" so WebKit is forced to recomposite (and re-sample the
+     backdrop) every frame instead of caching a stale snapshot. */
+  @keyframes goo-keep-alive {
+    from {
+      opacity: 0.999;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  .goo-blur-layer,
+  .goo-contrast-layer {
+    animation: goo-keep-alive 1s ease-in-out infinite alternate;
+  }
+
+  /* 4. tint — washes the page background colour over the goo result via
      multiply, so the white gaps between blobs read as the theme's bg
      instead of stark white */
   .tint-layer {
-    z-index: 2;
+    z-index: 3;
     background: var(--bg);
     mix-blend-mode: multiply;
   }
 
-  /* 4. UI — grid reference lines and drag handles, unaffected by the above */
+  /* 5. UI — grid reference lines and drag handles, unaffected by the above */
   .grid-svg {
-    z-index: 3;
+    z-index: 4;
     display: block;
     pointer-events: none;
   }
 
   .handle-layer {
-    z-index: 4;
+    z-index: 5;
   }
   .handle {
     position: absolute;
