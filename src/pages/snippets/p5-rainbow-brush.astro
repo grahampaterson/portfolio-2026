@@ -4,6 +4,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 export const meta = {
   title: "P5 Rainbow Brush",
   description: "A noise-driven rainbow paintbrush",
+  date: "2026-08-18",
 };
 ---
 
@@ -13,8 +14,7 @@ export const meta = {
   new p5((p: any) => {
     const cols = [0, 0.3, 0.23];
     let previousPos:
-      | { x1: number; y1: number; x2: number; y2: number }
-      | undefined;
+      { x1: number; y1: number; x2: number; y2: number } | undefined;
     const strokeWidth = 3;
 
     p.setup = () => {
