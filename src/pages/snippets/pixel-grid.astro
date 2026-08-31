@@ -1,4 +1,6 @@
 ---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
 export const meta = {
   title: "Pixel grid",
   description:
@@ -7,28 +9,8 @@ export const meta = {
 };
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
-    />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@500&display=swap"
-    />
-    <title>Goo Grid</title>
-  </head>
-  <body>
-    <!--
+<BaseLayout backgroundColour="#7f7f7f">
+  <!--
       Rendering structure below mirrors a known-working reference exactly:
       base background -> raw pixels -> blur overlay -> contrast overlay ->
       tint overlay -> UI, with the three effect overlays spanning the whole
@@ -96,8 +78,7 @@ export const meta = {
         <div class="kf-strip" id="kfStrip"></div>
       </div>
     </div>
-  </body>
-</html>
+</BaseLayout>
 
 <script>
   (function () {
@@ -677,6 +658,8 @@ export const meta = {
 </script>
 
 <style is:global>
+  @import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@500&display=swap");
+
   :root {
     --bg: #7f7f7f;
     --panel: #c7c7c7;
