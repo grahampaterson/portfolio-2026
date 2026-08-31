@@ -9,6 +9,7 @@ interface SnippetModule {
     title?: string;
     description?: string;
     thumbnail?: ImageMetadata;
+    date?: Date;
   };
 }
 
@@ -22,22 +23,23 @@ const links = Object.entries(pages).map(([path, mod]) => {
     ...mod.meta,
   };
 });
+const linksSorted = links.sort((a, b) => {
+  return new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime();
+});
 ---
 
 <BaseLayout>
-  {
-    links.map(({ href, title, description, thumbnail }) => {
-      return (
-        <a href={href}>
-          {/* {thumbnail && (
-            <Image src={thumbnail} alt={title ?? "image"} width={400} />
-          )} */}
-          <div class="linkStyle">{title}</div>
-          {/* {description} */}
-        </a>
-      );
-    })
-  }
+  <div class="container">
+    {
+      linksSorted.map(({ href, title }) => {
+        return (
+          <a href={href}>
+            <div class="linkStyle">{title}</div>
+          </a>
+        );
+      })
+    }
+  </div>
 </BaseLayout>
 
 <style>
@@ -53,6 +55,11 @@ const links = Object.entries(pages).map(([path, mod]) => {
     }
   }
 
+  .container {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+  }
   .linkStyle {
     font-size: 40px;
     font-weight: 500;
