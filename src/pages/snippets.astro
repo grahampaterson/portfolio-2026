@@ -24,14 +24,14 @@ const links = Object.entries(pages).map(([path, mod]) => {
   };
 });
 const linksSorted = links.sort((a, b) => {
-  return new Date(b.date) - new Date(a.date);
+  return new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime();
 });
 ---
 
 <BaseLayout>
   <div class="container">
     {
-      links.map(({ href, title, description, thumbnail }) => {
+      linksSorted.map(({ href, title }) => {
         return (
           <a href={href}>
             <div class="linkStyle">{title}</div>
