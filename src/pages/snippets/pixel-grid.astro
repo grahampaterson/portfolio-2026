@@ -19,6 +19,12 @@ export const meta = {
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
     />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@500&display=swap"
+    />
     <title>Goo Grid</title>
   </head>
   <body>
@@ -51,11 +57,9 @@ export const meta = {
     </div>
 
     <div class="debug-panel" id="debugPanel">
-      <div class="playback">
-        <button class="play-btn" id="playBtn">&#9654;</button>
-        <button class="icon-btn" id="collapseBtn" title="Collapse"
-          >&#9662;</button
-        >
+      <div class="panel-header">
+        <button class="play-btn" id="playBtn">Play</button>
+        <button class="collapse-btn" id="collapseBtn">Collapse</button>
       </div>
 
       <div class="panel-body" id="panelBody">
@@ -84,15 +88,12 @@ export const meta = {
           </div>
         </div>
 
-        <div class="playback">
-          <button class="snap-btn active" id="snapBtn">Snap 1/2</button>
-          <button class="icon-btn" id="resetBtn" title="Reset">&#8634;</button>
+        <div class="snap-reset-row">
+          <button class="cell-btn active" id="snapBtn">Snap 1/2</button>
+          <button class="cell-btn" id="resetBtn">Reset</button>
         </div>
 
-        <div class="kf-section">
-          <div class="kf-title">Keyframes</div>
-          <div class="kf-strip" id="kfStrip"></div>
-        </div>
+        <div class="kf-strip" id="kfStrip"></div>
       </div>
     </div>
   </body>
@@ -103,6 +104,7 @@ export const meta = {
     const GRID = 6; // full grid is 0..6 on each axis
     const N_POINTS = 5; // number of independently-controlled points
     const CONTRAST = 55; // fixed contrast for the goo threshold effect
+    const DOT_R = 0.03; // grid-intersection dot radius, in viewBox units
 
     // quincunx layout: a starting point in each quadrant, plus a center point.
     // points are free to move to any quadrant — mirrorSet() always produces
@@ -315,32 +317,20 @@ export const meta = {
     // ---------- main stage rendering ----------
 
     function buildStageOnce() {
-      // grid lines (plain SVG, unfiltered — no reason for this to ever break)
-      // styled via CSS custom properties so they adapt to light/dark automatically
+      // grid intersection dots (plain SVG, unfiltered — no reason for this
+      // to ever break) — one dot at every (i, j) lattice point of the 6x6 grid
       gridSvg.innerHTML = "";
       for (let i = 0; i <= GRID; i++) {
-        const soft = i !== 0 && i !== GRID / 2 && i !== GRID;
-        const styleStr = `stroke:var(--line-strong); stroke-opacity:${soft ? 0.35 : 0.6}`;
-        gridSvg.appendChild(
-          svgEl("line", {
-            x1: i,
-            y1: 0,
-            x2: i,
-            y2: GRID,
-            style: styleStr,
-            "stroke-width": i === GRID / 2 ? 0.018 : 0.012,
-          }),
-        );
-        gridSvg.appendChild(
-          svgEl("line", {
-            x1: 0,
-            y1: i,
-            x2: GRID,
-            y2: i,
-            style: styleStr,
-            "stroke-width": i === GRID / 2 ? 0.018 : 0.012,
-          }),
-        );
+        for (let j = 0; j <= GRID; j++) {
+          gridSvg.appendChild(
+            svgEl("circle", {
+              cx: i,
+              cy: j,
+              r: DOT_R,
+              style: "fill:var(--dot)",
+            }),
+          );
+        }
       }
 
       // fixed pool of pixel divs — never removed/recreated, only repositioned
@@ -459,17 +449,12 @@ export const meta = {
         thumb.appendChild(dom);
         thumb.addEventListener("click", () => selectKeyframe(idx));
 
-        const label = document.createElement("div");
-        label.className = "kf-label";
-        label.textContent = String(idx + 1).padStart(2, "0");
-
         tile.appendChild(thumb);
-        tile.appendChild(label);
 
         if (keyframes.length > 1) {
           const del = document.createElement("button");
           del.className = "kf-del";
-          del.textContent = "×";
+          del.setAttribute("aria-label", "Delete keyframe");
           del.addEventListener("click", (ev) => {
             ev.stopPropagation();
             deleteKeyframe(idx);
@@ -482,7 +467,7 @@ export const meta = {
 
       const addBtn = document.createElement("button");
       addBtn.className = "kf-add";
-      addBtn.textContent = "+";
+      addBtn.setAttribute("aria-label", "Add keyframe");
       addBtn.addEventListener("click", addKeyframe);
       kfStrip.appendChild(addBtn);
 
@@ -540,14 +525,14 @@ export const meta = {
 
     function togglePlay() {
       if (keyframes.length < 2) {
-        playBtn.style.background = "var(--danger)";
+        playBtn.style.backgroundColor = "var(--danger)";
         setTimeout(() => {
-          playBtn.style.background = "var(--accent)";
+          playBtn.style.backgroundColor = "var(--accent)";
         }, 220);
         return;
       }
       playing = !playing;
-      playBtn.innerHTML = playing ? "&#10073;&#10073;" : "&#9654;";
+      playBtn.textContent = playing ? "Pause" : "Play";
       if (playing) {
         playSeg = selected;
         playStart = performance.now();
@@ -640,8 +625,7 @@ export const meta = {
     function setCollapsed(v: boolean) {
       collapsed = v;
       debugPanel.classList.toggle("collapsed", collapsed);
-      collapseBtn.innerHTML = collapsed ? "&#9652;" : "&#9662;";
-      collapseBtn.title = collapsed ? "Expand" : "Collapse";
+      collapseBtn.textContent = collapsed ? "Expand" : "Collapse";
     }
 
     collapseBtn.addEventListener("click", () => {
@@ -653,7 +637,7 @@ export const meta = {
       "click",
       () => {
         playing = false;
-        playBtn.innerHTML = "&#9654;";
+        playBtn.textContent = "Play";
         keyframes = [{ points: defaultPoints() }];
         selected = 0;
         activeIndex = -1;
@@ -694,28 +678,14 @@ export const meta = {
 
 <style is:global>
   :root {
-    --bg: #d6d6d3;
-    --panel: #e6e6e2;
-    --line: #b7b6b1;
-    --line-strong: #1a1a1a;
-    --ink: #171717;
-    --ink-dim: #6f6e6a;
-    --accent: #e8560f;
-    --blob: #181818;
+    --bg: #7f7f7f;
+    --panel: #c7c7c7;
+    --line-strong: #000000;
+    --ink: #000000;
+    --accent: #ff6d50;
+    --blob: #000000;
+    --dot: #a4a1a1;
     --danger: #b3382a;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #202020;
-      --panel: #292927;
-      --line: #48473f;
-      --line-strong: #4e4d47;
-      --ink: #eeecea;
-      --ink-dim: #8d8c89;
-      --accent: #ff7a33;
-      --blob: #eeeeee;
-      --danger: #d9604c;
-    }
   }
   * {
     box-sizing: border-box;
@@ -730,28 +700,28 @@ export const meta = {
     padding: 0;
     height: 100%;
     color: var(--ink);
-    font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+    font-family: "DM Mono", ui-monospace, "SF Mono", Menlo, monospace;
     overflow: hidden;
     overscroll-behavior: none;
     touch-action: none;
-    background-color: hsl(0, 0%, 68%);
+    background: var(--bg);
   }
 
   /* ===== rendering (matches the reference recipe — see comment in markup) ===== */
 
-  /* base — the "white background" the reference uses; ours is themed */
   .field {
     position: relative;
     width: 100vw;
     height: 100dvh;
-    background: var(--bg);
+    background: white;
     touch-action: none;
   }
 
   /* centered square that both the raw pixels and the UI (grid/handles) are
      positioned against — kept as two separate same-sized/same-position
      elements (not one shared box) because the pixels must sit *below* the
-     effect overlays while the UI must sit *above* them */
+     effect overlays while the UI must sit *above* them. Offset up slightly
+     (bottom: 20%) so the floating panel below has room without covering it. */
   .stage {
     position: absolute;
     inset: 0;
@@ -807,8 +777,11 @@ export const meta = {
     animation: goo-keep-alive 1s ease-in-out infinite alternate;
   }
 
-  /* tint — washes the field's background colour over the goo result using
-     plain opacity, not mix-blend-mode: multiply, which doesn't composite
+  /* tint — a flat black wash at 50% opacity. Black-over-anything can never
+     lighten a pixel, so the pure-black blobs are completely unaffected;
+     the crushed-white gaps left by contrast() get pulled down to exactly
+     the mid-grey (0.5*black + 0.5*white = #7f7f7f) the grid uses. Plain
+     opacity, not mix-blend-mode: multiply, which doesn't composite
      reliably with backdrop-filter layers on Safari */
   .overlay.tint {
     z-index: 3;
@@ -816,7 +789,7 @@ export const meta = {
     opacity: 0.5;
   }
 
-  /* UI — grid reference lines and drag handles, unaffected by the above */
+  /* UI — grid reference dots and drag handles, unaffected by the above */
   #uiStage {
     z-index: 4;
   }
@@ -888,149 +861,168 @@ export const meta = {
     transform: translateX(-50%);
     z-index: 1000;
     width: min(92vw, 420px);
-    max-height: 60vh;
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding: 16px;
     background: var(--panel);
-    border: 1.5px solid var(--line-strong);
-    border-radius: 12px;
+    border: 1px solid var(--line-strong);
+    overflow: hidden;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  /* collapsed: only the header row (play/pause + expand toggle) stays visible */
+  /* collapsed: only the header row (play/pause + expand toggle) stays visible.
+     width is a fixed px value (not "auto") so it's actually animatable —
+     transitions to/from intrinsic-sizing keywords don't interpolate reliably */
   .debug-panel.collapsed {
-    gap: 0;
+    width: 182px;
   }
-  .debug-panel.collapsed .panel-body {
-    display: none;
+
+  .panel-header {
+    display: flex;
+    align-items: stretch;
+    flex-shrink: 0;
+    font-size: 12px;
   }
+  .play-btn,
+  .collapse-btn {
+    border: none;
+    font: inherit;
+    font-size: 12px;
+    color: black;
+    cursor: pointer;
+    touch-action: manipulation;
+    white-space: nowrap;
+  }
+  .play-btn {
+    flex: 1 1 auto;
+    padding: 19px 13px;
+    background-color: var(--accent);
+    background-image: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.2),
+      rgba(0, 0, 0, 0.2)
+    );
+    background-blend-mode: overlay;
+    box-shadow:
+      1px 1px 1.5px rgba(0, 0, 0, 0.1),
+      2px 2px 4.5px rgba(0, 0, 0, 0.1),
+      inset 2.5px 2.5px 1.5px rgba(255, 255, 255, 0.28),
+      inset -2.5px -2.5px 1.5px rgba(0, 0, 0, 0.84);
+  }
+  .collapse-btn {
+    flex: none;
+    align-self: stretch;
+    padding: 6px 14px;
+    border-left: 1px solid var(--line-strong);
+    background: var(--panel);
+    box-shadow:
+      1px 1px 1.5px rgba(0, 0, 0, 0.1),
+      2px 2px 4.5px rgba(0, 0, 0, 0.1);
+  }
+
+  /* the body's height animates via max-height (a large fixed cap), the
+     standard cross-browser trick for animating toward content-driven height */
   .panel-body {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    min-height: 0;
+    max-height: 600px;
+    opacity: 1;
+    overflow: hidden;
+    transition:
+      max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.25s ease;
   }
-
-  .icon-btn {
-    background: var(--panel);
-    border: 1.5px solid var(--line-strong);
-    color: var(--ink);
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    touch-action: manipulation;
-    flex-shrink: 0;
-  }
-  .icon-btn:active {
-    background: var(--line);
+  .debug-panel.collapsed .panel-body {
+    max-height: 0;
+    opacity: 0;
   }
 
   .controls {
     display: flex;
     flex-direction: column;
-    gap: 11px;
-    flex-shrink: 0;
   }
   .slider-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    height: 28px;
+    padding: 0 16px;
+    border-top: 1px solid var(--line-strong);
   }
   .slider-row label {
-    font-size: 10px;
-    color: var(--ink-dim);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    width: 62px;
+    width: 50px;
     flex-shrink: 0;
+    font-size: 12px;
+    color: black;
   }
   input[type="range"] {
     -webkit-appearance: none;
     appearance: none;
     flex: 1;
-    height: 2px;
-    background: var(--line-strong);
+    height: 28px;
+    margin: 0 6px;
+    background: transparent;
     outline: none;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 4px;
+    background: black;
+    border-radius: 0.5px;
   }
   input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
+    margin-top: -7px;
     border-radius: 2px;
-    background: var(--accent);
-    margin-top: 0px;
+    background-color: var(--accent);
+    background-image: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.2),
+      rgba(0, 0, 0, 0.2)
+    );
+    background-blend-mode: overlay;
+    box-shadow:
+      1px 1px 1.5px rgba(0, 0, 0, 0.1),
+      2px 2px 4.5px rgba(0, 0, 0, 0.1),
+      inset 1.5px 1.5px 1.5px rgba(255, 255, 255, 0.28),
+      inset -1.5px -1.5px 1.5px rgba(0, 0, 0, 0.44);
   }
   .slider-val {
-    font-size: 10px;
-    color: var(--ink-dim);
-    width: 30px;
-    text-align: right;
+    width: 45px;
     flex-shrink: 0;
+    text-align: right;
+    font-size: 12px;
+    color: black;
   }
 
-  .playback {
+  .snap-reset-row {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    padding: 4px 0;
+    border-top: 1px solid var(--line-strong);
   }
-  .play-btn {
-    width: 54px;
-    height: 54px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid var(--line-strong);
-    font-size: 18px;
-    touch-action: manipulation;
-  }
-  .play-btn:active {
-    transform: scale(0.94);
-  }
-  .snap-btn {
-    font-size: 10px;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+  .cell-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 6px 13px;
+    border: none;
     background: var(--panel);
-    border: 1.5px solid var(--line-strong);
-    color: var(--ink-dim);
-    padding: 9px 12px;
-    border-radius: 6px;
+    font: inherit;
+    font-size: 12px;
+    color: black;
+    cursor: pointer;
     touch-action: manipulation;
+    text-align: center;
   }
-  .snap-btn.active {
+  .cell-btn + .cell-btn {
+    border-left: 1px solid var(--line-strong);
+  }
+  .cell-btn.active {
     color: var(--accent);
-    border-color: var(--accent);
-    background: var(--panel);
   }
 
-  .kf-section {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    min-height: 0;
-  }
-  .kf-title {
-    font-size: 10px;
-    color: var(--ink-dim);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
   .kf-strip {
     display: flex;
-    gap: 10px;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 2px 2px 8px;
+    border-top: 1px solid var(--line-strong);
     touch-action: pan-x;
     -webkit-overflow-scrolling: touch;
   }
@@ -1040,62 +1032,83 @@ export const meta = {
   .kf-tile {
     position: relative;
     flex-shrink: 0;
-    width: 60px;
+    width: 64px;
+    height: 64px;
+    border-right: 1px solid var(--line-strong);
   }
   .kf-thumb {
-    position: relative;
-    width: 60px;
-    height: 60px;
-    border-radius: 5px;
+    position: absolute;
+    inset: 0;
     background: var(--bg);
-    border: 1.5px solid var(--line-strong);
     overflow: hidden;
     touch-action: manipulation;
   }
   .kf-thumb.selected {
-    border-color: var(--accent);
-    border-width: 2px;
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
   }
   .thumb-blobs {
     position: absolute;
     inset: 0;
   }
-  .kf-label {
-    font-size: 9px;
-    color: var(--ink-dim);
-    text-align: center;
-    margin-top: 4px;
-  }
   .kf-del {
     position: absolute;
-    top: -6px;
-    right: -6px;
-    width: 18px;
-    height: 18px;
-    border-radius: 2px;
-    background: var(--danger);
-    color: #fff;
-    font-size: 11px;
-    line-height: 18px;
-    text-align: center;
-    border: 1.5px solid var(--bg);
+    top: 0;
+    right: 0;
+    width: 21px;
+    height: 21px;
+    padding: 0;
+    background: var(--panel);
+    border: none;
+    border-bottom: 1px solid var(--line-strong);
+    border-left: 1px solid var(--line-strong);
+    cursor: pointer;
     touch-action: manipulation;
   }
+  .kf-del::before,
+  .kf-del::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 1px;
+    background: black;
+  }
+  .kf-del::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+  .kf-del::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+
   .kf-add {
-    width: 60px;
-    height: 60px;
-    border-radius: 5px;
-    border: 1.5px dashed var(--line);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--ink-dim);
-    font-size: 18px;
+    position: relative;
     flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+    padding: 0;
+    border: none;
+    background: var(--panel);
+    cursor: pointer;
     touch-action: manipulation;
   }
-  .kf-add:active {
-    border-color: var(--accent);
-    color: var(--accent);
+  .kf-add::before,
+  .kf-add::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background: black;
+  }
+  .kf-add::before {
+    width: 32px;
+    height: 1px;
+    transform: translate(-50%, -50%);
+  }
+  .kf-add::after {
+    width: 1px;
+    height: 32px;
+    transform: translate(-50%, -50%);
   }
 </style>
